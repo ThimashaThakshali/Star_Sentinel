@@ -1,72 +1,73 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
- * most up to date changes to the libraries and their usages.
- */
-
 package com.example.starsentinel.presentation
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeText
-import androidx.wear.tooling.preview.devices.WearDevices
-import com.example.starsentinel.R
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.starsentinel.presentation.theme.StarSentinelTheme
+import androidx.compose.material3.*
+import androidx.core.content.edit
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+ override fun onCreate(savedInstanceState: Bundle?) {
+     super.onCreate(savedInstanceState)
+     setContent {
+         val isFirstLaunch = remember { mutableStateOf(checkFirstLaunch()) }
+         val navController = rememberNavController()
+         AppNavigation(navController, isFirstLaunch.value)
+     }
+ }
 
-        super.onCreate(savedInstanceState)
-
-        setTheme(android.R.style.Theme_DeviceDefault)
-
-        setContent {
-            WearApp("Android")
-        }
-    }
+ private fun checkFirstLaunch(): Boolean {
+     val sharedPreferences: SharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+     val isFirstLaunch = sharedPreferences.getBoolean("firstLaunch", true)
+     if (isFirstLaunch) {
+         sharedPreferences.edit { putBoolean("firstLaunch", false) }
+     }
+     return isFirstLaunch
+ }
 }
 
 @Composable
-fun WearApp(greetingName: String) {
-    StarSentinelTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
-        ) {
-            TimeText()
-            Greeting(greetingName = greetingName)
-        }
-    }
+fun AppNavigation(navController: NavHostController, isFirstLaunch: Boolean) {
+ NavHost(navController = navController, startDestination = if (isFirstLaunch) "welcomeScreen" else "setupScreen") {
+     composable("welcomeScreen") { WelcomeScreen(navController) }
+     composable("setupScreen") { SetupScreen(navController) }
+     composable("alertMessageScreen") { AlertMessageScreen(navController) }
+     composable("createContact") { CreateContactScreen(navController) }
+ }
 }
 
 @Composable
-fun Greeting(greetingName: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
-    )
-}
+fun WelcomeScreen(navController: NavController) {
+ StarSentinelTheme {
+     Column(
+         modifier = Modifier
+             .fillMaxSize()
+             .verticalScroll(rememberScrollState()),  // Enables scrolling
+         verticalArrangement = Arrangement.Center,
+         horizontalAlignment = Alignment.CenterHorizontally
+     ) {
+         Text(text = "Welcome to Star Sentinel!")
 
-@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
-@Composable
-fun DefaultPreview() {
-    WearApp("Preview Android")
+         Spacer(modifier = Modifier.height(20.dp))
+
+         Button(onClick = { navController.navigate("setupScreen") }) {
+             Text("Next")
+         }
+     }
+ }
 }

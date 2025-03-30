@@ -38,13 +38,13 @@ fun SetupScreen(navController: NavController) {
         SetupOption(
             iconRes = R.drawable.alert_icon,
             text = "Add Alerts",
-            onClick = {navController.navigate("alertMessageScreen") /* Navigate to Add Alerts Screen */ }
+            onClick = { navController.navigate("alertMessageScreen") /* Navigate to Add Alerts Screen */ }
         )
 
         SetupOption(
             iconRes = R.drawable.add_contact_icon,
             text = "Add Contacts",
-            onClick = { /* Navigate to Add Contacts Screen */ }
+            onClick = { navController.navigate("createContact") } // Navigate to Add Contacts Screen
         )
 
         SetupOption(

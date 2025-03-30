@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.navigation.runtime.android)
     implementation(libs.material3.android)
     implementation(libs.navigation.compose)
+    implementation(libs.runtime.livedata)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
