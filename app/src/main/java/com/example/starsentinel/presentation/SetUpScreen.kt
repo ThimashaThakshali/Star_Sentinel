@@ -29,9 +29,15 @@ fun SetupScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        androidx.wear.compose.material.Text(text = "Set Up Screen", style = MaterialTheme.typography.title1)
+        // make the font black of the title Set Up Screen
+        androidx.compose.material3.Text(
+            text = "Set Up Screen",
+            style = MaterialTheme.typography.title1,
+            color = Color.Black
+        )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 

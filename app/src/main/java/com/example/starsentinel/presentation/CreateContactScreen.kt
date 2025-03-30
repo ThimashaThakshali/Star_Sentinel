@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.starsentinel.R
@@ -25,9 +26,11 @@ fun CreateContactScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(20.dp)
             .verticalScroll(rememberScrollState())
     ) {
+
+        Spacer(modifier = Modifier.height(16.dp))
         // Back button and title
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -37,7 +40,8 @@ fun CreateContactScreen(navController: NavController) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = "Create Contact",
-                style = MaterialTheme.typography.titleLarge
+
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             )
         }
 
@@ -68,7 +72,8 @@ fun CreateContactScreen(navController: NavController) {
         TextField(
             value = firstName,
             onValueChange = { firstName = it },
-            placeholder = { Text("Enter First Name") },
+            placeholder = { Text("Enter First Name" , style = MaterialTheme.typography.bodySmall)},
+
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -80,7 +85,7 @@ fun CreateContactScreen(navController: NavController) {
         TextField(
             value = lastName,
             onValueChange = { lastName = it },
-            placeholder = { Text("Enter Last Name") },
+            placeholder = { Text("Enter Last Name", style = MaterialTheme.typography.bodySmall)},
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -92,7 +97,7 @@ fun CreateContactScreen(navController: NavController) {
         TextField(
             value = phone,
             onValueChange = { phone = it },
-            placeholder = { Text("Enter Phone Number") },
+            placeholder = { Text("Enter Phone Number" , style = MaterialTheme.typography.bodySmall) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -104,13 +109,15 @@ fun CreateContactScreen(navController: NavController) {
         TextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text("Enter Email") },
+            placeholder = { Text("Enter Email" , style = MaterialTheme.typography.bodySmall) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
+        // Add a Spacer to push the button to the bottom
+        Spacer(modifier = Modifier.height(16.dp))
         // Save button
         Button(
             onClick = {
