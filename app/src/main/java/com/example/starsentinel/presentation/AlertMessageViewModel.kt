@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.core.content.edit
 
 class AlertMessageViewModel(application: Application) : AndroidViewModel(application) {
     private val sharedPreferences: SharedPreferences =
@@ -24,7 +25,7 @@ class AlertMessageViewModel(application: Application) : AndroidViewModel(applica
 
     fun updateMessage(newMessage: String) {
         currentMessage.value = newMessage
-        sharedPreferences.edit().putString("alertMessage", newMessage).apply()
+        sharedPreferences.edit { putString("alertMessage", newMessage) }
 
         // Add new message to predefined messages only if not present
         val updatedMessages = predefinedMessages.value?.toMutableList() ?: mutableListOf()
@@ -34,7 +35,7 @@ class AlertMessageViewModel(application: Application) : AndroidViewModel(applica
             if (updatedMessages.size > 5) updatedMessages.removeAt(0)
 
             predefinedMessages.value = updatedMessages //  Assign a NEW LIST
-            sharedPreferences.edit().putStringSet("predefinedMessages", updatedMessages.toSet()).apply()
+            sharedPreferences.edit { putStringSet("predefinedMessages", updatedMessages.toSet()) }
         }
     }
 }

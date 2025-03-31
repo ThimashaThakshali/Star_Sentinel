@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.utils.loadPropertyFromResources
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -58,4 +60,9 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
+    implementation(libs.gson)
+    implementation (libs.play.services.maps)
+    implementation (libs.play.services.location)
+    implementation (libs.maps.compose)
+
 }

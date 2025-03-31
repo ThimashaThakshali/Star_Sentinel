@@ -56,7 +56,7 @@ fun SetupScreen(navController: NavController) {
         SetupOption(
             iconRes = R.drawable.safe_zone_icon,
             text = "Add Safe Zone",
-            onClick = { /* Navigate to Add Safe Zone Screen */ }
+            onClick = { }
         )
 
         Spacer(modifier = Modifier.height(32.dp))

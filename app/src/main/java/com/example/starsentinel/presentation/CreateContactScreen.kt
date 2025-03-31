@@ -1,15 +1,16 @@
 package com.example.starsentinel.presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,7 +18,10 @@ import androidx.navigation.NavController
 import com.example.starsentinel.R
 
 @Composable
-fun CreateContactScreen(navController: NavController) {
+fun CreateContactScreen(navController: NavController, onContactAdded: () -> Unit) {
+    val context = LocalContext.current
+    val contactStorage = remember { ContactStorage(context) }
+
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
@@ -27,23 +31,17 @@ fun CreateContactScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()), // Enables scrolling
+        verticalArrangement = Arrangement.Top,
     ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
-        // Back button and title
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Add spacer to center the title
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = "Create Contact",
+        Spacer(modifier = Modifier.height(15.dp))
 
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            )
-        }
+        // Title
+        Text(
+            text = "Create Contact",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -53,9 +51,12 @@ fun CreateContactScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "Add Photo", style = MaterialTheme.typography.labelMedium)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             IconButton(
-                onClick = { /* TODO: Add photo logic */ },
+                onClick = {
+                    // TODO: Add photo logic (e.g., image picker)
+                    Toast.makeText(context, "Add photo logic", Toast.LENGTH_SHORT).show()
+                },
                 modifier = Modifier.size(80.dp)
             ) {
                 Image(
@@ -67,72 +68,70 @@ fun CreateContactScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // First Name field
+        // First Name Field
         Text(text = "First Name", style = MaterialTheme.typography.labelMedium)
         TextField(
             value = firstName,
             onValueChange = { firstName = it },
-            placeholder = { Text("Enter First Name" , style = MaterialTheme.typography.bodySmall)},
-
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            placeholder = { Text("Enter First Name" , style = MaterialTheme.typography.bodySmall) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
+        Spacer(modifier = Modifier.height(10.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Last Name field
+        // Last Name Field
         Text(text = "Last Name", style = MaterialTheme.typography.labelMedium)
         TextField(
             value = lastName,
             onValueChange = { lastName = it },
-            placeholder = { Text("Enter Last Name", style = MaterialTheme.typography.bodySmall)},
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            placeholder = { Text("Enter Last Name",  style = MaterialTheme.typography.bodySmall) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
+        Spacer(modifier = Modifier.height(10.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Phone field
-        Text(text = "Phone (Mobile)", style = MaterialTheme.typography.labelMedium)
+        // Phone Field
+        Text(text = "Phone Number", style = MaterialTheme.typography.labelMedium)
         TextField(
             value = phone,
             onValueChange = { phone = it },
-            placeholder = { Text("Enter Phone Number" , style = MaterialTheme.typography.bodySmall) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            placeholder = { Text("Enter Phone Number",  style = MaterialTheme.typography.bodySmall) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
+        Spacer(modifier = Modifier.height(10.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Email field
-        Text(text = "Add Email", style = MaterialTheme.typography.labelMedium)
+        // Email Field
+        Text(text = "Email", style = MaterialTheme.typography.labelMedium)
         TextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text("Enter Email" , style = MaterialTheme.typography.bodySmall) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            placeholder = { Text("Enter Email",  style = MaterialTheme.typography.bodySmall) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Add a Spacer to push the button to the bottom
         Spacer(modifier = Modifier.height(16.dp))
-        // Save button
+
+        // Save Button
         Button(
             onClick = {
-                // Simple validation and save logic
                 if (firstName.isNotBlank() && phone.isNotBlank()) {
-                    // TODO: Save contact to SharedPreferences or database later
-                    navController.popBackStack()
+                    val newContact = Contact(firstName, lastName, phone, email)
+                    contactStorage.saveContact(newContact)
+                    onContactAdded() // Refresh the contact list
+
+                    // ✅ Navigate to ContactsScreen instead of just popping back
+                    navController.navigate("contactsScreen") {
+                        popUpTo("createContact") { inclusive = true } // Remove createContact from backstack
+                    }
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            enabled = firstName.isNotBlank() && phone.isNotBlank()
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Save")
+            Text("Save Contact")
         }
+        Spacer(modifier = Modifier.height(16.dp))
+
     }
 }

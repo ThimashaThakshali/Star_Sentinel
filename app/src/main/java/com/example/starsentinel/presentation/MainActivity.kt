@@ -22,12 +22,18 @@ import androidx.compose.material3.*
 import androidx.core.content.edit
 
 class MainActivity : ComponentActivity() {
+ private lateinit var contactStorage: ContactStorage
+ private var contacts = mutableStateOf(listOf<Contact>())
+
  override fun onCreate(savedInstanceState: Bundle?) {
      super.onCreate(savedInstanceState)
+     contactStorage = ContactStorage(this)
+     contacts.value = contactStorage.getContacts()
+
      setContent {
          val isFirstLaunch = remember { mutableStateOf(checkFirstLaunch()) }
          val navController = rememberNavController()
-         AppNavigation(navController, isFirstLaunch.value)
+         AppNavigation(navController, isFirstLaunch.value, contactStorage, contacts)
      }
  }
 
@@ -42,12 +48,18 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(navController: NavHostController, isFirstLaunch: Boolean) {
+fun AppNavigation(navController: NavHostController, isFirstLaunch: Boolean, contactStorage: ContactStorage, contacts: MutableState<List<Contact>>) {
  NavHost(navController = navController, startDestination = if (isFirstLaunch) "welcomeScreen" else "setupScreen") {
      composable("welcomeScreen") { WelcomeScreen(navController) }
      composable("setupScreen") { SetupScreen(navController) }
      composable("alertMessageScreen") { AlertMessageScreen(navController) }
-     composable("createContact") { CreateContactScreen(navController) }
+     composable("createContact") {
+         CreateContactScreen(navController) {
+             contacts.value = contactStorage.getContacts() // Refresh the list after adding a contact
+         }
+     }
+     composable("contactsScreen") { ContactsScreen(navController) }
+
  }
 }
 
