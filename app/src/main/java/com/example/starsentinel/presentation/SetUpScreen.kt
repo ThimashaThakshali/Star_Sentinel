@@ -56,10 +56,10 @@ fun SetupScreen(navController: NavController) {
         SetupOption(
             iconRes = R.drawable.safe_zone_icon,
             text = "Add Safe Zone",
-            onClick = { }
+            onClick = { navController.navigate("setGeofence")}
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = { navController.navigate("welcomeScreen") }) {
             androidx.compose.material3.Text("Continue")
