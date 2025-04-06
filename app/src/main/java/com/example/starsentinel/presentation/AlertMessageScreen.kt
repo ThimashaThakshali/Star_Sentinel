@@ -3,9 +3,10 @@ package com.example.starsentinel.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,73 +17,143 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun AlertMessageScreen(navController: NavController, viewModel: AlertMessageViewModel = viewModel()) {
-    var textState by remember { mutableStateOf(TextFieldValue(viewModel.currentMessage.value ?: "")) }
-    val predefinedMessages by viewModel.predefinedMessages.observeAsState(emptyList())
+    // State for the currently edited message
+    var textState by remember { mutableStateOf(TextFieldValue(viewModel.currentMessage.value ?: "I might be in danger...")) }
+
+    // Get predefined messages from view model
+    val predefinedMessages by viewModel.predefinedMessages.observeAsState(
+        listOf("I'm in trouble", "Help Me!") // Default messages if viewModel doesn't provide any
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp)
-            .verticalScroll(rememberScrollState()), // Enables scrolling
-        verticalArrangement = Arrangement.Center,
+            .background(Color.Black) // Dark background like in image 4
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        // Current Alert Message Display
-        Text(text = "Currently Set to", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(text = viewModel.currentMessage.value ?: "I might be in danger...", style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.height(8.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Alert Messages",
+            style = MaterialTheme.typography.titleMedium,
+            color = Color(0xFFBDC1C6),
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
 
-        // Edit Alert Message with ✓ Save Button
-        TextField(
+        )
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Current Message Section
+        Text(
+            text = "Currently Set to                   ",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.White,
+            textAlign = TextAlign.Left,
+
+            )
+
+        Spacer(modifier = Modifier.height(15.dp))
+
+        // Editable current message with edit icon
+        OutlinedTextField(
             value = textState.text,
             onValueChange = { textState = TextFieldValue(it) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
-                .background(Color.LightGray),
+                .padding(horizontal = 4.dp),
+            shape = RoundedCornerShape(4.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.Gray,
+                focusedBorderColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedTextColor = Color.White,
+            ),
             singleLine = true,
-            label = { Text("Edit Alert Message") },
+            textStyle = LocalTextStyle.current.copy(
+                fontSize = 12.sp,
+
+            ),
+
             trailingIcon = {
-                if (textState.text.isNotEmpty()) { // ✅ Show tick only if text is entered
-                    IconButton(onClick = {
-                        viewModel.updateMessage(textState.text)
-                    }) {
-                        Icon(imageVector = Icons.Default.Check, contentDescription = "Save Message")
-                    }
+                IconButton(onClick = { /* Enable editing */ }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Message",
+                        tint = Color.White,
+                        // set size of the icon
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Predefined Messages
-        Text(text = "Select Message", style = MaterialTheme.typography.titleMedium)
+        // Predefined Messages Section
+        Text(
+            text = "Select Message",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White
+        )
+
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Display predefined messages as buttons
-        predefinedMessages.forEach { message: String ->
+        // Display predefined messages as buttons with gray background
+        predefinedMessages.forEach { message ->
             Button(
                 onClick = {
+                    textState = TextFieldValue(message)
                     viewModel.updateMessage(message)
-                    textState = TextFieldValue(message) // ✅ Set text field to selected message
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 5.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF363739), // Gray background as in image 4
+                ),
+                shape = RoundedCornerShape(6.dp)
             ) {
-                Text(message)
+                Text(
+                    text =  message,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Normal,
+                )
+
             }
-            Spacer(modifier = Modifier.height(8.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.weight(1f)) // Push save button to bottom
 
-        // Save Button
-        Button(onClick = { navController.popBackStack() }) {
+        // Save Button (Blue as in image 4)
+        Button(
+            onClick = {
+                viewModel.updateMessage(textState.text)
+                navController.popBackStack()
+            },
+            modifier = Modifier
+                .fillMaxWidth(0.7f) // Make it narrower like in the image
+                .padding(vertical = 8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2563EB) // Blue color as shown in image 4
+            ),
+            shape = RoundedCornerShape(18.dp)
+        ) {
             Text("Save")
         }
     }
