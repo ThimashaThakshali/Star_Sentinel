@@ -16,6 +16,8 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.MaterialTheme
 import com.example.starsentinel.R
@@ -34,8 +36,10 @@ fun SetupScreen(navController: NavController) {
         // make the font black of the title Set Up Screen
         androidx.compose.material3.Text(
             text = "Set Up Screen",
-            style = MaterialTheme.typography.title1,
-            color = Color.Black
+            style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
         )
 
 
@@ -61,7 +65,7 @@ fun SetupScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button(onClick = { navController.navigate("welcomeScreen") }) {
+        Button(onClick = { navController.navigate("homeScreen") }) {
             androidx.compose.material3.Text("Continue")
         }
         Spacer(modifier = Modifier.height(20.dp))

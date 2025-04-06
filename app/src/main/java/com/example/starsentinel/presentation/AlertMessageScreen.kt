@@ -30,6 +30,7 @@ fun AlertMessageScreen(navController: NavController, viewModel: AlertMessageView
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
         // Current Alert Message Display
         Text(text = "Currently Set to", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(4.dp))

@@ -1,5 +1,6 @@
 package com.example.starsentinel.presentation
 
+import SettingsScreen
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -145,7 +146,7 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = if (isFirstLaunch) "welcomeScreen" else "setupScreen"
+        startDestination = if (isFirstLaunch) "welcomeScreen" else "homeScreen"
     ) {
         composable("welcomeScreen") { WelcomeScreen(navController) }
         composable("setupScreen") { SetupScreen(navController) }
@@ -158,7 +159,9 @@ fun AppNavigation(
         composable("contactsScreen") { ContactsScreen(navController) }
         composable("setGeofence") { SetGeofenceScreen(navController) }
         composable("manageGeofences") { ManageGeofencesScreen(navController) }
-    }
+        composable("homeScreen") { HomeScreen(navController)}
+        composable("settingsScreen") { SettingsScreen(navController) }
+        }
 }
 
 @Composable
