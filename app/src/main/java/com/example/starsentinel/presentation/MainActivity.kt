@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,8 +21,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.navigation.NavController
@@ -146,22 +149,35 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = if (isFirstLaunch) "welcomeScreen" else "homeScreen"
+        startDestination = if (isFirstLaunch) "welcomeScreen" else "homeScreen",
     ) {
         composable("welcomeScreen") { WelcomeScreen(navController) }
         composable("setupScreen") { SetupScreen(navController) }
         composable("alertMessageScreen") { AlertMessageScreen(navController) }
         composable("createContact") {
-            CreateContactScreen(navController) {
-                contacts.value = contactStorage.getContacts()
-            }
+            CreateContactScreen(
+                navController = navController,
+                phone = null
+            )
         }
-        composable("contactsScreen") { ContactsScreen(navController) }
+        composable("editContact/{phone}") { backStackEntry ->
+            val phone = backStackEntry.arguments?.getString("phone")
+            CreateContactScreen(
+                navController = navController,
+                phone = phone
+            )
+        }
+        composable("contactsScreen") {
+            ContactsScreen(
+                navController = navController,
+                onContactUpdated = { contacts.value = contactStorage.getContacts() }
+            )
+        }
         composable("setGeofence") { SetGeofenceScreen(navController) }
         composable("manageGeofences") { ManageGeofencesScreen(navController) }
-        composable("homeScreen") { HomeScreen(navController)}
+        composable("homeScreen") { HomeScreen(navController) }
         composable("settingsScreen") { SettingsScreen(navController) }
-        }
+    }
 }
 
 @Composable
@@ -169,14 +185,25 @@ fun WelcomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Welcome to Star Sentinel!")
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = { navController.navigate("setupScreen") }) {
-            Text("Next")
+        Spacer(modifier = Modifier.height(30.dp))
+        Text(
+            text = "Welcome to Star Sentinel!" ,
+            color = Color(0xFFFFFFFF),
+        )
+        Spacer(modifier = Modifier.height(30.dp))
+        Button(onClick = {
+            navController.navigate("setupScreen")
+        }) {
+            Text(
+                text="Next",
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 5.dp, horizontal = 15.dp)
+                )
         }
     }
 }

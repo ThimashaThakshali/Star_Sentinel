@@ -2,6 +2,7 @@ package com.example.starsentinel.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.MaterialTheme
 import com.example.starsentinel.R
@@ -27,17 +29,19 @@ fun SetupScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black)
+            .padding(5.dp)
             .verticalScroll(rememberScrollState()), // Enables scrolling
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // make the font black of the title Set Up Screen
         androidx.compose.material3.Text(
             text = "Set Up Screen",
-            style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
-            color = Color.Black,
+            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+            color = Color(0xFFBDC1C6),
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
         )
@@ -63,7 +67,7 @@ fun SetupScreen(navController: NavController) {
             onClick = { navController.navigate("setGeofence")}
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Button(onClick = { navController.navigate("homeScreen") }) {
             androidx.compose.material3.Text("Continue")
@@ -77,9 +81,9 @@ fun SetupOption(iconRes: Int, text: String, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(vertical = 10.dp, horizontal = 15.dp )
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp), // Rounded corners with a radius of 12dp
+        shape = RoundedCornerShape(25.dp), // Rounded corners with a radius of 12dp
         color = Color(0xFF0891B2) // Background color
     ) {
         Row(
@@ -91,10 +95,15 @@ fun SetupOption(iconRes: Int, text: String, onClick: () -> Unit) {
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = text,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(22.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            androidx.compose.material3.Text(text = text, color = Color.White) // Set text color to white for better contrast
+            Spacer(modifier = Modifier.width(10.dp))
+            androidx.compose.material3.Text(
+                text = text,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }

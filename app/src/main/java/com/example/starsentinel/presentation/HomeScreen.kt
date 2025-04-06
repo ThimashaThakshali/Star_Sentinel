@@ -27,7 +27,7 @@ import kotlin.math.sin
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    var isFearDetected by remember { mutableStateOf(true) }
+    var isFearDetected by remember { mutableStateOf(false) }
     var heartRate by remember { mutableStateOf(78) }
     var isSpeechDetected by remember { mutableStateOf(true) }
 

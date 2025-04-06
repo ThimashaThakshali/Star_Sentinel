@@ -44,8 +44,9 @@ fun SettingsScreen(navController: NavController) {
                         text = "Settings",
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.White,
-                        fontWeight = FontWeight.Normal,
+                        fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
+
                     )
                 }
             }

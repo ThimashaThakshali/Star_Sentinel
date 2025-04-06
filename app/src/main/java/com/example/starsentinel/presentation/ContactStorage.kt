@@ -15,15 +15,11 @@ class ContactStorage(context: Context) {
     fun saveContact(contact: Contact) {
         val contactList = getContacts().toMutableList()
         contactList.add(contact)
-
-        val jsonString = gson.toJson(contactList)
-        sharedPreferences.edit { putString("savedContacts", jsonString) }
+        saveContacts(contactList)
     }
 
     fun getContacts(): List<Contact> {
         val jsonString = sharedPreferences.getString("savedContacts", null)
-
-        // Ensure jsonString is not null before parsing
         if (jsonString.isNullOrEmpty()) return emptyList()
 
         return try {
@@ -31,7 +27,16 @@ class ContactStorage(context: Context) {
             gson.fromJson(jsonString, type) ?: emptyList()
         } catch (e: Exception) {
             e.printStackTrace()
-            emptyList() // Return an empty list if there's an error
+            emptyList()
         }
+    }
+
+    fun saveContacts(contacts: List<Contact>) {
+        val jsonString = gson.toJson(contacts)
+        sharedPreferences.edit { putString("savedContacts", jsonString) }
+    }
+
+    fun getContactByPhone(phone: String): Contact? {
+        return getContacts().firstOrNull { it.phone == phone }
     }
 }
