@@ -7,12 +7,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -93,20 +94,20 @@ fun SetGeofenceScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black)
+            .padding(vertical = 16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "Set Safe Zone",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.Black,
+            style = MaterialTheme.typography.titleMedium,
+            color = Color(0xFFBDC1C6),
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         if (!hasLocationPermission(context)) {
             Text(
@@ -149,33 +150,120 @@ fun SetGeofenceScreen(navController: NavController) {
             }
         }
 
+        Text(
+            text = "Geofence Name",
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .padding(top = 20.dp, bottom = 4.dp, start = 16.dp)
+                .align(Alignment.Start)
+        )
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Zone Name") },
+            placeholder = {
+                Text(
+                    text = "Enter Zone Name",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                ) },
             singleLine = true,
+            maxLines = 1,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.Gray,
+                cursorColor = Color.White,
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .padding(top = 15.dp, start = 11.dp, end = 11.dp),
+            trailingIcon = {
+                if (name.isNotEmpty()) {
+                    IconButton(
+                        onClick = { name = "" },
+                                modifier = Modifier.size(20.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Clear",
+                            tint = Color.Gray
+                        )
+                    }
+                }
+            }
+        )
+
+        Text(
+            text = "Address",
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .padding(top = 18.dp, bottom = 4.dp, start = 16.dp)
+                .align(Alignment.Start)
         )
 
         OutlinedTextField(
             value = address,
             onValueChange = { address = it },
-            label = { Text("Address") },
+            placeholder = {
+                Text(
+                    text = "Enter Address",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            },
             singleLine = true,
+            maxLines = 1,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.Gray,
+                cursorColor = Color.White,
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+                .padding(top = 15.dp, start = 11.dp, end = 11.dp),
             trailingIcon = {
-                if (address.isNotEmpty()) {
-                    IconButton(onClick = {
-                        searchAddress(context, address) { latLng ->
-                            location = latLng
-                            cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
+                Row {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    if (address.isNotEmpty()) {
+                        IconButton(
+                            onClick = { address = "" },
+                            modifier = Modifier.size(20.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear",
+                                tint = Color.Gray
+                            )
                         }
-                    }) {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
+                            onClick = {
+                                searchAddress(context, address) { latLng ->
+                                    location = latLng
+                                    cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
+                                }
+                            },
+                            modifier = Modifier.size(20.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = Color(0xFFFFFFFF)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
             }
@@ -187,10 +275,20 @@ fun SetGeofenceScreen(navController: NavController) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, bottom = 6.dp)
             ) {
-                Text("Radius:")
-                Text("${radius.toInt()}m")
+                Text(
+                    text = "Radius:",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "${radius.toInt()}m",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
             Slider(
                 value = radius,
@@ -201,6 +299,8 @@ fun SetGeofenceScreen(navController: NavController) {
             )
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
             onClick = {
                 location?.let { latLng ->
@@ -210,12 +310,22 @@ fun SetGeofenceScreen(navController: NavController) {
                     }
                 }
             },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2563EB),
+                disabledContainerColor = Color.DarkGray,
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(24.dp),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .width(100.dp)
+                .height(48.dp),
             enabled = name.isNotEmpty() && location != null && hasLocationPermission(context)
         ) {
-            Text("Save Safe Zone")
+            Text(
+                text = "Save",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

@@ -175,7 +175,8 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                 .align(Alignment.BottomEnd)
                 .padding(25.dp)
                 .size(40.dp), // Make it smaller
-            containerColor = Color(0xFF0891B2)
+            containerColor = Color(0xFF2563EB)
+
         ) {
             Icon(
                 Icons.Default.Add,

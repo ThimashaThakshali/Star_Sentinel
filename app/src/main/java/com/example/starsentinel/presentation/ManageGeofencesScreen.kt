@@ -1,6 +1,7 @@
 package com.example.starsentinel.presentation
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -44,23 +45,25 @@ fun ManageGeofencesScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(Color.Black)
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Safe Zones",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.Black,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFFBDC1C6),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.Black)
                 .padding(paddingValues)
                 .padding(8.dp)
         ) {
@@ -70,10 +73,19 @@ fun ManageGeofencesScreen(navController: NavController) {
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("No safe zones set")
+                        Text(
+                            text = "No safe zones set",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFFFFFFF),)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { navController.navigate("setGeofence") }) {
+                        Button(
+                            onClick = { navController.navigate("setGeofence") },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2563EB)
+                            )
+                        ) {
                             Text("Add Safe Zone")
+
                         }
                     }
                 }
