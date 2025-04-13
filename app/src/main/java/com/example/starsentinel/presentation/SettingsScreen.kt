@@ -52,7 +52,7 @@ fun SettingsScreen(navController: NavController) {
             }
 
             val settingsItems = listOf(
-                Triple("Geo fence", "manageGeofences", R.drawable.safe_zone_icon),
+                Triple("Safe Zones", "manageGeofences", R.drawable.safe_zone_icon),
                 Triple("Emergency Contacts", "contactsScreen", R.drawable.contact_icon),
                 Triple("Alert Messages", "alertMessageScreen", R.drawable.alert_msg_icon)
             )

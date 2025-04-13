@@ -6,25 +6,26 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageGeofencesScreen(navController: NavController) {
     val context = LocalContext.current
@@ -56,7 +57,23 @@ fun ManageGeofencesScreen(navController: NavController) {
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("setGeofence") },
+                containerColor = Color(0xFF2563EB),
+                contentColor = Color.White,
+                modifier = Modifier
+                    .padding(top = 25.dp, bottom = 16.dp, start = 25.dp, end = 25.dp)
+                    .size(40.dp), // Make it smaller
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Safe Zone",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     ) { paddingValues ->
@@ -72,22 +89,11 @@ fun ManageGeofencesScreen(navController: NavController) {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No safe zones set",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFFFFFFFF),)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { navController.navigate("setGeofence") },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF2563EB)
-                            )
-                        ) {
-                            Text("Add Safe Zone")
-
-                        }
-                    }
+                    Text(
+                        text = "No safe zones set",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFFFFFFFF)
+                    )
                 }
             } else {
                 LazyColumn(
@@ -104,7 +110,6 @@ fun ManageGeofencesScreen(navController: NavController) {
                                 showDeleteDialog = true
                             }
                         )
-                        Divider()
                     }
                 }
             }
@@ -115,19 +120,27 @@ fun ManageGeofencesScreen(navController: NavController) {
     if (showDeleteDialog && selectedGeofence != null) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Safe Zone") },
+            title = {
+                Column {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Delete Safe Zone",
+                        color = Color.White
+                    )
+                }
+            },
             text = {
-                Text("Are you sure you want to delete the safe zone '${selectedGeofence?.name}'?")
+                Text(
+                    text = "Are you sure you want to delete the safe zone '${selectedGeofence?.name}'?",
+                    color = Color.LightGray
+                )
             },
             confirmButton = {
                 Button(
                     onClick = {
                         scope.launch {
                             selectedGeofence?.let { geofence ->
-                                // Remove from storage
                                 geofenceStorage.removeGeofence(geofence.id)
-
-                                // Remove from active geofences
                                 geofencingClient.removeGeofences(listOf(geofence.id))
                                     .addOnSuccessListener {
                                         Toast.makeText(
@@ -136,23 +149,27 @@ fun ManageGeofencesScreen(navController: NavController) {
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     }
-
-                                // Refresh the list
                                 geofences = geofenceStorage.getGeofences()
                             }
                             showDeleteDialog = false
                             selectedGeofence = null
                         }
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
                     Text("Delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                ) {
                     Text("Cancel")
                 }
-            }
+                Spacer(modifier = Modifier.height(16.dp))
+            },
+            containerColor = Color.Black
         )
     }
 }
@@ -163,56 +180,64 @@ fun GeofenceItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 4.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFF242424))
+            .fillMaxWidth()
+    ){
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clickable { onEdit() },
+
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(end = 8.dp)
+                .padding(end = 4.dp, start = 8.dp)
         ) {
+
             Text(
                 text = geofence.name,
                 style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFFFFFFFF),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
+
             )
 
-            Text(
-                text = if (geofence.address.isNotEmpty()) {
-                    geofence.address
-                } else {
-                    "${geofence.latitude.format(4)}, ${geofence.longitude.format(4)}"
-                },
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
 
-            Text(
-                text = "Radius: ${geofence.radius.toInt()}m",
-                style = MaterialTheme.typography.bodySmall
-            )
         }
 
-        IconButton(onClick = onEdit) {
+        IconButton(
+            onClick = onEdit,
+            modifier = Modifier.size(24.dp) // Adjust size if needed
+
+
+        ) {
             Icon(
                 imageVector = Icons.Default.Edit,
-                contentDescription = "Edit"
+                tint = Color.White,
+                contentDescription = "Edit" ,
             )
         }
 
-        IconButton(onClick = onDelete) {
+        Spacer(modifier = Modifier.width(4.dp)) // Add a small spacer to control the gap
+
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.size(24.dp)) {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Delete",
-                tint = MaterialTheme.colorScheme.error
+                tint = Color.White,
             )
         }
+    }
     }
 }
 

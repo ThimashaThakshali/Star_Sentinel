@@ -2,6 +2,7 @@ package com.example.starsentinel.presentation
 
 import SettingsScreen
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -39,18 +40,12 @@ class MainActivity : ComponentActivity() {
     private var contacts = mutableStateOf(listOf<Contact>())
     private var showPermissionDialog = mutableStateOf(false)
 
-    // Permission launcher with proper handling
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val allGranted = permissions.all { it.value }
-        if (!allGranted) {
+        if (!permissions.all { it.value }) {
             showPermissionDialog.value = true
-            Toast.makeText(
-                this,
-                "Location permissions are required for safety features",
-                Toast.LENGTH_LONG
-            ).show()
+            Toast.makeText(this, "Location permissions required", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -77,9 +72,7 @@ class MainActivity : ComponentActivity() {
                     AlertDialog(
                         onDismissRequest = { showPermissionDialog.value = false },
                         title = { Text("Permission Required") },
-                        text = {
-                            Text("Background location access is required for safe zones to work when the app is closed. " +
-                                    "Please grant the permission in app settings.")
+                        text = { Text("Background location access is required for safety features.")
                         },
                         confirmButton = {
                             Button(onClick = {
@@ -102,6 +95,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("WearRecents")
     private fun openAppSettings(context: Context) {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", context.packageName, null)

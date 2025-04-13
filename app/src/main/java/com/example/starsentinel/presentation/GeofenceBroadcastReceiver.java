@@ -5,19 +5,18 @@ import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
-import com.google.android.gms.common.api.ApiException;
 import java.util.List;
 
 public class GeofenceBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
+        assert geofencingEvent != null;
         if (geofencingEvent.hasError()) {
             int errorCode = geofencingEvent.getErrorCode();
             Log.e("Geofence", "Geofencing Error: " + errorCode);
@@ -69,16 +68,14 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void createNotificationChannel(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "Geofence Alerts";
-            String description = "Notifications for geofence events";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
+        CharSequence name = "Geofence Alerts";
+        String description = "Notifications for geofence events";
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+        channel.setDescription(description);
 
-            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
+        NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
     }
 
     private static final String CHANNEL_ID = "geofence_alerts_channel";
