@@ -40,6 +40,7 @@ android {
     }
 }
 
+
 dependencies {
 
     implementation(libs.play.services.wearable)
@@ -56,6 +57,9 @@ dependencies {
     implementation(libs.material3.android)
     implementation(libs.navigation.compose)
     implementation(libs.runtime.livedata)
+    implementation(libs.litert)
+    implementation(libs.media3.common.ktx)
+    implementation(libs.compiler)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
@@ -65,6 +69,8 @@ dependencies {
     implementation (libs.play.services.location)
     implementation (libs.maps.compose)
     implementation(libs.lottie.compose)
+    implementation (libs.okhttp)
+    implementation (libs.json)
 
 
 }

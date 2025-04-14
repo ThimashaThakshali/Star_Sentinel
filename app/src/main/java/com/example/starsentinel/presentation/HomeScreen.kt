@@ -1,15 +1,8 @@
 package com.example.starsentinel.presentation
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.media.MediaRecorder
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -20,86 +13,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.starsentinel.R
-import java.io.IOException
-import kotlin.math.abs
-import kotlin.math.sqrt
+import kotlin.math.sin
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    // State for fear detection
     var isFearDetected by remember { mutableStateOf(false) }
+    var heartRate by remember { mutableStateOf(78) }
+    var isSpeechDetected by remember { mutableStateOf(true) }
 
-    // Sensor states
-    val (heartRate, setHeartRate) = remember { mutableStateOf(0) }
-    val (isSpeaking, setIsSpeaking) = remember { mutableStateOf(false) }
-
-    // Get sensor data
-    val context = LocalContext.current
-    DisposableEffect(Unit) {
-        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        val heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
-        val audioRecorder = AudioRecorder(context)
-
-        val sensorListener = object : SensorEventListener {
-            override fun onSensorChanged(event: SensorEvent?) {
-                event?.let {
-                    if (it.sensor.type == Sensor.TYPE_HEART_RATE) {
-                        setHeartRate(it.values[0].toInt())
-                        // Check for elevated heart rate (threshold can be adjusted)
-                        if (it.values[0] > 100) { // Threshold for elevated heart rate
-                            isFearDetected = true
-                        }
-                    }
-                }
-            }
-
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-        }
-
-        // Start listening
-        sensorManager.registerListener(
-            sensorListener,
-            heartRateSensor,
-            SensorManager.SENSOR_DELAY_NORMAL
-        )
-
-        audioRecorder.startListening { isSpeakingDetected ->
-            setIsSpeaking(isSpeakingDetected)
-            if (isSpeakingDetected) {
-                // Additional fear detection logic when speaking
-                if (heartRate > 90) { // Combined threshold
-                    isFearDetected = true
-                }
-            }
-        }
-
-        onDispose {
-            sensorManager.unregisterListener(sensorListener)
-            audioRecorder.stopListening()
-        }
-    }
-
-    // Main UI
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        // Watch face with fear indicator
+        // Main watch face
         Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(240.dp)
                 .clip(CircleShape)
@@ -108,169 +48,153 @@ fun HomeScreen(navController: NavController) {
                     width = 10.dp,
                     color = if (isFearDetected) Color.Red else Color.Green,
                     shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
+                )
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(16.dp)
             ) {
-                // Heart rate display
-                Text(
-                    text = "$heartRate BPM",
-                    color = Color.White,
-                    fontSize = 18.sp
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Speech detection indicator
-                SpeechDetectionIndicator(isDetecting = isSpeaking)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Fear status
-                Text(
-                    text = if (isFearDetected) "FEAR DETECTED" else "SAFE",
-                    color = if (isFearDetected) Color.Red else Color.Green,
-                    fontSize = 16.sp
-                )
-            }
-        }
-    }
-}
-
-// Audio Recorder class for speech detection
-class AudioRecorder(private val context: Context) {
-    private var mediaRecorder: MediaRecorder? = null
-    private var isListening = false
-    private var callback: ((Boolean) -> Unit)? = null
-
-    fun startListening(onSpeechDetected: (Boolean) -> Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-
-        callback = onSpeechDetected
-        isListening = true
-
-        try {
-            mediaRecorder = MediaRecorder().apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-                setOutputFile("/dev/null") // We don't need to save the recording
-
-                setOnErrorListener { _, _, _ ->
-                    stopListening()
+                // Bell Icon
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.bell_icon_white),
+                        contentDescription = "Notification Bell",
+                        modifier = Modifier.size(55.dp)
+                    )
                 }
 
-                prepare()
-                start()
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Start amplitude monitoring
-                Thread {
-                    while (isListening) {
-                        val amplitude = mediaRecorder?.maxAmplitude ?: 0
-                        val isSpeaking = amplitude > 5000 // Threshold for speech detection
-                        callback?.invoke(isSpeaking)
-                        Thread.sleep(100) // Check every 100ms
+                // Heart rate and speech detection indicators row
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.heart_rate_icon),
+                            contentDescription = "Heart Rate",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "$heartRate bpm",
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
                     }
-                }.start()
-            }
-        } catch (e: IOException) {
-            stopListening()
-        }
-    }
 
-    fun stopListening() {
-        isListening = false
-        try {
-            mediaRecorder?.stop()
-            mediaRecorder?.release()
-        } catch (e: Exception) {
-            // Ignore
+                    // Speech detection indicator
+                    SpeechDetectionIndicator(
+                        isDetecting = isSpeechDetected
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Settings button
+                IconButton(
+                    onClick = { navController.navigate("settingsScreen") },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.settings_icon),
+                        contentDescription = "Settings",
+                        tint = Color.White
+                    )
+                }
+            }
         }
-        mediaRecorder = null
     }
 }
 
 @Composable
-fun SpeechDetectionIndicator(isDetecting: Boolean) {
+fun SpeechDetectionIndicator(
+    isDetecting: Boolean,
+    modifier: Modifier = Modifier
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
     ) {
+        // Microphone icon
         Icon(
             painter = painterResource(id = R.drawable.mic_icon),
-            contentDescription = "Microphone",
+            contentDescription = "Voice Analysis",
             tint = Color.White,
             modifier = Modifier.size(20.dp)
         )
 
+        // Audio waveform when speech is detected
         if (isDetecting) {
-            // Animated waveform when speaking
-            AudioWaveform()
-        } else {
-            // Flat line when silent
-            Box(
+            AudioWaveform(
                 modifier = Modifier
                     .width(24.dp)
-                    .height(2.dp)
-                    .background(Color.White)
+                    .height(16.dp)
             )
+        } else {
+            // Flat line when no speech is detected
+            Canvas(
+                modifier = Modifier
+                    .width(24.dp)
+                    .height(16.dp)
+            ) {
+                val centerY = size.height / 2
+                drawLine(
+                    color = Color.White,
+                    start = Offset(0f, centerY),
+                    end = Offset(size.width, centerY),
+                    strokeWidth = 2f,
+                    cap = StrokeCap.Round
+                )
+            }
         }
     }
 }
 
 @Composable
-fun AudioWaveform() {
-    // Simple animated waveform
-    val infiniteTransition = rememberInfiniteTransition()
-    val animValue by infiniteTransition.animateFloat(
+fun AudioWaveform(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "waveform")
+    val animationProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        )
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "waveform"
     )
 
-    Canvas(modifier = Modifier.size(24.dp, 16.dp)) {
-        val height = size.height
+    Canvas(modifier = modifier) {
         val width = size.width
+        val height = size.height
+        val centerY = height / 2
 
-        // Draw 3 bars with animation
-        val barWidth = width / 4
-        val maxBarHeight = height
+        // Draw the waveform
+        for (i in 0 until width.toInt() step 4) {
+            val x = i.toFloat()
+            val amplitude = (sin((x / width * 4 + animationProgress) * 2 * Math.PI) * 0.5 + 0.5).toFloat()
+            val lineHeight = height * amplitude
 
-        // Left bar
-        val leftHeight = maxBarHeight * (0.3f + animValue * 0.7f)
-        drawRect(
-            color = Color.White,
-            topLeft = Offset(0f, height - leftHeight),
-            size = Size(barWidth, leftHeight)
-        )
-
-        // Middle bar
-        val middleHeight = maxBarHeight * (0.5f + animValue * 0.5f)
-        drawRect(
-            color = Color.White,
-            topLeft = Offset(barWidth * 2, height - middleHeight),
-            size = Size(barWidth, middleHeight)
-        )
-
-        // Right bar
-        val rightHeight = maxBarHeight * (0.2f + animValue * 0.8f)
-        drawRect(
-            color = Color.White,
-            topLeft = Offset(barWidth * 3, height - rightHeight),
-            size = Size(barWidth, rightHeight)
-        )
+            drawLine(
+                color = Color.White,
+                start = Offset(x, centerY - lineHeight / 2),
+                end = Offset(x, centerY + lineHeight / 2),
+                strokeWidth = 2f,
+                cap = StrokeCap.Round
+            )
+        }
     }
 }
 
