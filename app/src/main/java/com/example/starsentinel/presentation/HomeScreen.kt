@@ -1,8 +1,10 @@
 package com.example.starsentinel.presentation
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -15,21 +17,110 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.starsentinel.R
+import com.example.starsentinel.sensor.HeartRateSensor
+import com.example.starsentinel.audio.SpeechDetector
 import kotlin.math.sin
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    var isFearDetected by remember { mutableStateOf(false) }
-    var heartRate by remember { mutableStateOf(78) }
-    var isSpeechDetected by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Create and remember sensor instances
+    val heartRateSensor = remember { HeartRateSensor(context) }
+    val speechDetector = remember { SpeechDetector(context) }
+
+    // Permission states
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    var missingPermissions by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // State variables
+    var isFearDetected by remember { mutableStateOf(true) }
+    val heartRate by heartRateSensor.heartRate.collectAsState(initial = 0)
+    val isSpeechDetected by speechDetector.isSpeechDetected.collectAsState(initial = false)
+
+    // Start/stop sensors based on lifecycle
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    // Check permissions and start sensors
+                    val neededPermissions = mutableListOf<String>()
+
+                    if (!heartRateSensor.hasPermission()) {
+                        neededPermissions.add("Body Sensors")
+                    } else {
+                        heartRateSensor.startListening()
+                    }
+
+                    if (!speechDetector.hasPermission()) {
+                        neededPermissions.add("Microphone")
+                    } else {
+                        speechDetector.startListening()
+                    }
+
+                    if (neededPermissions.isNotEmpty()) {
+                        missingPermissions = neededPermissions
+                        showPermissionDialog = true
+                    }
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    heartRateSensor.stopListening()
+                    speechDetector.stopListening()
+                }
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            heartRateSensor.stopListening()
+            speechDetector.stopListening()
+        }
+    }
+
+    // Permission dialog
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDialog = false },
+            title = { Text("Permission Required") },
+            text = {
+                Text("This app needs ${missingPermissions.joinToString(" and ")} permissions " +
+                        "to monitor your health and detect voice commands.")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showPermissionDialog = false
+                    // Open app settings
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }) {
+                    Text("Open Settings")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPermissionDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -37,7 +128,7 @@ fun HomeScreen(navController: NavController) {
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        // Main watch face
+        // Main watch face - same UI, but now with real data
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -89,7 +180,7 @@ fun HomeScreen(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "$heartRate bpm",
+                            text = if (heartRateSensor.hasPermission()) "$heartRate bpm" else "-- bpm",
                             color = Color.White,
                             fontSize = 12.sp
                         )
@@ -97,7 +188,7 @@ fun HomeScreen(navController: NavController) {
 
                     // Speech detection indicator
                     SpeechDetectionIndicator(
-                        isDetecting = isSpeechDetected
+                        isDetecting = speechDetector.hasPermission() && isSpeechDetected
                     )
                 }
 
@@ -119,6 +210,7 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
+// The rest of the code remains the same
 @Composable
 fun SpeechDetectionIndicator(
     isDetecting: Boolean,
