@@ -71,8 +71,17 @@ class MainActivity : ComponentActivity() {
                 if (showPermissionDialog.value) {
                     AlertDialog(
                         onDismissRequest = { showPermissionDialog.value = false },
-                        title = { Text("Permission Required") },
-                        text = { Text("Background location access is required for safety features.")
+                        title = { Text(
+                            text ="Permission Required",
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 8.dp, top = 8.dp),
+                        ) },
+                        text = { Text(
+                            text ="Background location access is required for safety features.",
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 8.dp, top = 8.dp),
+
+                            )
                         },
                         confirmButton = {
                             Button(onClick = {
@@ -84,10 +93,16 @@ class MainActivity : ComponentActivity() {
                         },
                         dismissButton = {
                             TextButton(onClick = { showPermissionDialog.value = false }) {
-                                Text("Cancel")
+                                Text(
+                                    text ="Cancel",
+                                    color = Color.White
+                                )
                             }
-                        }
+                        },
+                        containerColor = Color.Black,
+                        textContentColor = Color.White
                     )
+
                 }
 
                 AppNavigation(navController, isFirstLaunch.value, contactStorage, contacts)
@@ -120,6 +135,10 @@ class MainActivity : ComponentActivity() {
                 ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.RECORD_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED  &&
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.SEND_SMS
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
@@ -131,7 +150,9 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 Manifest.permission.BODY_SENSORS,
-                Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.SEND_SMS,
+                Manifest.permission.READ_PHONE_STATE
             )
         )
     }
@@ -183,6 +204,9 @@ fun AppNavigation(
         composable("manageGeofences") { ManageGeofencesScreen(navController) }
         composable("homeScreen") { HomeScreen(navController) }
         composable("settingsScreen") { SettingsScreen(navController) }
+        composable("locationScreen") { LocationScreen(navController) }
+        composable("biometricDataScreen") { BiometricDataScreen(navController) }
+
     }
 }
 

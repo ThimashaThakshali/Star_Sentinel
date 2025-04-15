@@ -18,7 +18,7 @@ import java.io.IOException
 import kotlin.math.abs
 
 /**
- * A class to detect speech activity using audio input
+ * A class to detect speech activity using audio input and extract audio features
  */
 class SpeechDetector(private val context: Context) {
     private val TAG = "SpeechDetector"
@@ -32,6 +32,12 @@ class SpeechDetector(private val context: Context) {
 
     private val _isSpeechDetected = MutableStateFlow(false)
     val isSpeechDetected: StateFlow<Boolean> = _isSpeechDetected.asStateFlow()
+
+    // Create feature extractor
+    private val audioFeatureExtractor = AudioFeatureExtractor()
+    val mfccValues = audioFeatureExtractor.mfccValues
+    val pitchMean = audioFeatureExtractor.pitchMean
+    val intensityVar = audioFeatureExtractor.intensityVar
 
     private val AMPLITUDE_THRESHOLD = 1500 // Adjust this threshold based on testing
     private val SPEECH_TIMEOUT_MS = 1000 // Time without speech before considering it ended
@@ -86,6 +92,7 @@ class SpeechDetector(private val context: Context) {
             audioRecord?.stop()
             audioRecord?.release()
             audioRecord = null
+            audioFeatureExtractor.reset()
         } catch (exception: Exception) {
             Log.e(TAG, "Error stopping speech detection: ${exception.message}")
         }
@@ -114,6 +121,9 @@ class SpeechDetector(private val context: Context) {
                         if (!_isSpeechDetected.value) {
                             _isSpeechDetected.value = true
                         }
+
+                        // Process audio features when speech is detected
+                        audioFeatureExtractor.processAudioBuffer(buffer, SAMPLE_RATE)
                     } else if (_isSpeechDetected.value && (currentTime - lastSpeechTime > SPEECH_TIMEOUT_MS)) {
                         _isSpeechDetected.value = false
                     }

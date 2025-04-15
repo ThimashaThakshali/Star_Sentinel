@@ -3,10 +3,12 @@ package com.example.starsentinel.presentation
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -27,28 +29,69 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.wear.compose.material.dialog.DialogDefaults
 import com.example.starsentinel.R
+import com.example.starsentinel.alert.AlertService
+import com.example.starsentinel.alert.WhatsAppAlertService
 import com.example.starsentinel.sensor.HeartRateSensor
 import com.example.starsentinel.audio.SpeechDetector
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.sin
+import com.example.starsentinel.detection.FearDetector
 
 @Composable
 fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
 
     // Create and remember sensor instances
     val heartRateSensor = remember { HeartRateSensor(context) }
     val speechDetector = remember { SpeechDetector(context) }
 
+    // Create AlertService instance
+    val smsAlertService = remember { AlertService(context) }
+    val whatsAppAlertService = remember { WhatsAppAlertService(context) }
+
     // Permission states
     var showPermissionDialog by remember { mutableStateOf(false) }
     var missingPermissions by remember { mutableStateOf<List<String>>(emptyList()) }
 
+    // Create and remember detector instance
+    val fearDetector = remember { FearDetector(context) }
+
+    // Collect all sensor data for fear detection
+    val meanRR by heartRateSensor.meanRR.collectAsState(initial = 0f)
+    val rmssd by heartRateSensor.rmssd.collectAsState(initial = 0f)
+    val sdnn by heartRateSensor.sdnn.collectAsState(initial = 0f)
+    val mfccValues by speechDetector.mfccValues.collectAsState(initial = List(13) { 0f })
+    val pitchMean by speechDetector.pitchMean.collectAsState(initial = 0f)
+    val intensityVar by speechDetector.intensityVar.collectAsState(initial = 0f)
+
     // State variables
-    var isFearDetected by remember { mutableStateOf(true) }
+    val isFearDetected by fearDetector.isFearDetected.collectAsState(initial = false)
     val heartRate by heartRateSensor.heartRate.collectAsState(initial = 0)
     val isSpeechDetected by speechDetector.isSpeechDetected.collectAsState(initial = false)
+
+    // Track manual alert button press with animation
+    var isButtonPressed by remember { mutableStateOf(false) }
+
+    // Process sensor data for fear detection
+    LaunchedEffect(heartRate, isSpeechDetected, mfccValues, pitchMean, intensityVar) {
+        // Only process if we have valid heart rate and audio data
+        if (heartRate > 0 && meanRR > 0) {
+            fearDetector.processData(
+                heartRate = heartRate,
+                meanRR = meanRR,
+                rmssd = rmssd,
+                sdnn = sdnn,
+                mfccValues = mfccValues,
+                pitchMean = pitchMean,
+                intensityVar = intensityVar
+            )
+        }
+    }
 
     // Start/stop sensors based on lifecycle
     DisposableEffect(lifecycleOwner) {
@@ -78,6 +121,7 @@ fun HomeScreen(navController: NavController) {
                 Lifecycle.Event.ON_PAUSE -> {
                     heartRateSensor.stopListening()
                     speechDetector.stopListening()
+                    fearDetector.reset()
                 }
                 else -> {}
             }
@@ -89,6 +133,7 @@ fun HomeScreen(navController: NavController) {
             lifecycleOwner.lifecycle.removeObserver(observer)
             heartRateSensor.stopListening()
             speechDetector.stopListening()
+            fearDetector.reset()
         }
     }
 
@@ -96,10 +141,16 @@ fun HomeScreen(navController: NavController) {
     if (showPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionDialog = false },
-            title = { Text("Permission Required") },
+            title = {
+                Text(
+                    text ="Permission Required",
+                    color = Color.White) },
             text = {
-                Text("This app needs ${missingPermissions.joinToString(" and ")} permissions " +
-                        "to monitor your health and detect voice commands.")
+                Text(
+                    text = "This app needs ${missingPermissions.joinToString(" and ")} permissions " +
+                        "to monitor your health and detect voice commands.",
+                    color = Color.White
+                )
             },
             confirmButton = {
                 Button(onClick = {
@@ -111,14 +162,20 @@ fun HomeScreen(navController: NavController) {
                     }
                     context.startActivity(intent)
                 }) {
-                    Text("Open Settings")
+                    Text(
+                        text ="Open Settings",
+                        color = Color.White
+                        )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showPermissionDialog = false }) {
-                    Text("Cancel")
+                    Text(text = "Cancel", color = Color.White
+                        )
                 }
-            }
+            },
+            containerColor = Color.Black,
+            textContentColor = Color.White
         )
     }
 
@@ -128,7 +185,7 @@ fun HomeScreen(navController: NavController) {
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        // Main watch face - same UI, but now with real data
+        //Main watch face
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -148,18 +205,38 @@ fun HomeScreen(navController: NavController) {
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Bell Icon
+                // Bell Icon (now clickable)
                 Box(
                     modifier = Modifier
                         .size(70.dp)
                         .clip(CircleShape)
-                        .background(Color.White),
+                        .background(if (isButtonPressed) Color.Red else Color.White)
+                        .clickable {
+                            // Send alert when bell icon is clicked
+                            smsAlertService.sendAlerts()
+
+                            // try WhatsApp as backup
+                            //whatsAppAlertService.sendAlerts()
+
+                            // Show visual feedback
+                            isButtonPressed = true
+
+                            // Reset visual feedback after short delay using proper coroutine scope
+                            coroutineScope.launch {
+                                delay(500)
+                                isButtonPressed = false
+                            }
+
+                            // Show toast confirmation
+                            Toast.makeText(context, "Alert sent to emergency contacts", Toast.LENGTH_SHORT).show()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.bell_icon_white),
-                        contentDescription = "Notification Bell",
-                        modifier = Modifier.size(55.dp)
+                        contentDescription = "Send Emergency Alert",
+                        modifier = Modifier.size(55.dp),
+                        tint = if (isButtonPressed) Color.White else Color.Black
                     )
                 }
 

@@ -1,3 +1,4 @@
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -19,10 +21,27 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.starsentinel.R
+import com.example.starsentinel.location.LocationService
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun SettingsScreen(navController: NavController) {
     var autoSendEnabled by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val locationService = remember { LocationService(context) }
+    val currentLocation by locationService.currentLocation.collectAsState()
+
+    // Start location updates to display current location
+    LaunchedEffect(key1 = Unit) {
+        locationService.startLocationUpdates()
+    }
+
+    // Clean up when leaving screen
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            locationService.stopLocationUpdates()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -43,10 +62,9 @@ fun SettingsScreen(navController: NavController) {
                     Text(
                         text = "Settings",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
+                        color = Color(0xFFBDC1C6),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-
                     )
                 }
             }
@@ -55,14 +73,15 @@ fun SettingsScreen(navController: NavController) {
                 Triple("Safe Zones", "manageGeofences", R.drawable.safe_zone_icon),
                 Triple("Emergency Contacts", "contactsScreen", R.drawable.contact_icon),
                 Triple("Alert Messages", "alertMessageScreen", R.drawable.alert_msg_icon),
-
+                Triple("Biometric Data", "biometricDataScreen", R.drawable.heart_rate_icon),
+                Triple("Current Location", "locationScreen", R.drawable.safe_zone_icon),
             )
 
             items(settingsItems) { (title, route, iconRes) ->
                 SettingItem(
                     title = title,
                     iconRes = iconRes,
-                    onClick = { navController.navigate(route) }
+                    onClick = { navController.navigate(route) },
                 )
             }
 
@@ -103,7 +122,11 @@ fun SettingsScreen(navController: NavController) {
 }
 
 @Composable
-fun SettingItem(title: String, iconRes: Int, onClick: () -> Unit) {
+fun SettingItem(
+    title: String,
+    iconRes: Int,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -112,23 +135,24 @@ fun SettingItem(title: String, iconRes: Int, onClick: () -> Unit) {
             .background(Color(0xFF242424))
             .fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = title,
-                modifier = Modifier.size(24.dp),
-                tint = Color.White
-            )
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                color = Color.White,
-                modifier = Modifier.weight(1f)
-            )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = title,
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.White
+                )
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
