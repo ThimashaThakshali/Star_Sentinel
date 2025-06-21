@@ -29,10 +29,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.wear.compose.material.dialog.DialogDefaults
 import com.example.starsentinel.R
 import com.example.starsentinel.alert.AlertService
-import com.example.starsentinel.alert.WhatsAppAlertService
 import com.example.starsentinel.sensor.HeartRateSensor
 import com.example.starsentinel.audio.SpeechDetector
 import kotlinx.coroutines.delay
@@ -51,8 +49,7 @@ fun HomeScreen(navController: NavController) {
     val speechDetector = remember { SpeechDetector(context) }
 
     // Create AlertService instance
-    val smsAlertService = remember { AlertService(context) }
-    val whatsAppAlertService = remember { WhatsAppAlertService(context) }
+    val alertService = remember { AlertService(context) }
 
     // Permission states
     var showPermissionDialog by remember { mutableStateOf(false) }
@@ -143,12 +140,14 @@ fun HomeScreen(navController: NavController) {
             onDismissRequest = { showPermissionDialog = false },
             title = {
                 Text(
-                    text ="Permission Required",
-                    color = Color.White) },
+                    text = "Permission Required",
+                    color = Color.White
+                )
+            },
             text = {
                 Text(
                     text = "This app needs ${missingPermissions.joinToString(" and ")} permissions " +
-                        "to monitor your health and detect voice commands.",
+                            "to monitor your health and detect voice commands.",
                     color = Color.White
                 )
             },
@@ -163,15 +162,14 @@ fun HomeScreen(navController: NavController) {
                     context.startActivity(intent)
                 }) {
                     Text(
-                        text ="Open Settings",
+                        text = "Open Settings",
                         color = Color.White
-                        )
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showPermissionDialog = false }) {
-                    Text(text = "Cancel", color = Color.White
-                        )
+                    Text(text = "Cancel", color = Color.White)
                 }
             },
             containerColor = Color.Black,
@@ -185,7 +183,7 @@ fun HomeScreen(navController: NavController) {
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        //Main watch face
+        // Main watch face
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -213,22 +211,16 @@ fun HomeScreen(navController: NavController) {
                         .background(if (isButtonPressed) Color.Red else Color.White)
                         .clickable {
                             // Send alert when bell icon is clicked
-                            smsAlertService.sendAlerts()
-
-                            // try WhatsApp as backup
-                            //whatsAppAlertService.sendAlerts()
+                            alertService.sendAlerts()
 
                             // Show visual feedback
                             isButtonPressed = true
 
-                            // Reset visual feedback after short delay using proper coroutine scope
+                            // Reset visual feedback after short delay
                             coroutineScope.launch {
                                 delay(500)
                                 isButtonPressed = false
                             }
-
-                            // Show toast confirmation
-                            Toast.makeText(context, "Alert sent to emergency contacts", Toast.LENGTH_SHORT).show()
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -287,7 +279,6 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
-// The rest of the code remains the same
 @Composable
 fun SpeechDetectionIndicator(
     isDetecting: Boolean,

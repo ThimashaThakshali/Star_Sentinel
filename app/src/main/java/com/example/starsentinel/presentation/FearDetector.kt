@@ -3,7 +3,6 @@ package com.example.starsentinel.detection
 import android.content.Context
 import android.util.Log
 import com.example.starsentinel.alert.AlertService
-import com.example.starsentinel.alert.WhatsAppAlertService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,8 +53,6 @@ class FearDetector(private val context: Context) {
     private var fearDetectedTimestamp: Long = 0
     private val FEAR_STATE_TIMEOUT_MS = 30000 // 30 seconds of fear state before resetting
 
-    private val whatsAppAlertService = WhatsAppAlertService(context)
-
     /**
      * Process sensor data to detect fear
      * @param heartRate Current heart rate in BPM
@@ -100,7 +97,6 @@ class FearDetector(private val context: Context) {
         // Combine all features into one vector
         val allFeatures = hrFeatures + audioFeatures
 
-
         // Make prediction using the model API
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -128,7 +124,6 @@ class FearDetector(private val context: Context) {
                     if (!alertSentForCurrentState) {
                         alertService.sendAlerts()
                         alertSentForCurrentState = true
-                        whatsAppAlertService.sendAlerts()
                         Log.d(TAG, "Alert sent to emergency contacts")
                     }
 
