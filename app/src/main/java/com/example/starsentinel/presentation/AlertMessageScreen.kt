@@ -24,18 +24,22 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun AlertMessageScreen(navController: NavController, viewModel: AlertMessageViewModel = viewModel()) {
-    // State for the currently edited message
-    var textState by remember { mutableStateOf(TextFieldValue(viewModel.currentMessage.value ?: "I might be in danger...")) }
+    // Get the current message and predefined messages from view model
+    val currentMessage by viewModel.currentMessage.observeAsState("I might be in danger...")
+    val predefinedMessages by viewModel.predefinedMessages.observeAsState(listOf("I'm in trouble", "Help Me!"))
 
-    // Get predefined messages from view model
-    val predefinedMessages by viewModel.predefinedMessages.observeAsState(
-        listOf("I'm in trouble", "Help Me!") // Default messages if viewModel doesn't provide any
-    )
+    // Local state for text field
+    var textState by remember { mutableStateOf(TextFieldValue(currentMessage)) }
+
+    // Update textState when currentMessage changes
+    LaunchedEffect(currentMessage) {
+        textState = TextFieldValue(currentMessage)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black) // Dark background like in image 4
+            .background(Color.Black)
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top,
@@ -49,20 +53,18 @@ fun AlertMessageScreen(navController: NavController, viewModel: AlertMessageView
             color = Color(0xFFBDC1C6),
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-
         )
 
         Spacer(modifier = Modifier.height(18.dp))
 
         // Current Message Section
         Text(
-            text = "Currently Set to                   ",
+            text = "Currently Set to",
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
             textAlign = TextAlign.Left,
-
-            )
+        )
 
         Spacer(modifier = Modifier.height(15.dp))
 
@@ -83,16 +85,13 @@ fun AlertMessageScreen(navController: NavController, viewModel: AlertMessageView
             singleLine = true,
             textStyle = LocalTextStyle.current.copy(
                 fontSize = 12.sp,
-
             ),
-
             trailingIcon = {
                 IconButton(onClick = { /* Enable editing */ }) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Edit Message",
                         tint = Color.White,
-                        // set size of the icon
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -123,34 +122,33 @@ fun AlertMessageScreen(navController: NavController, viewModel: AlertMessageView
                     .fillMaxWidth()
                     .padding(vertical = 5.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF363739), // Gray background as in image 4
+                    containerColor = Color(0xFF363739),
                 ),
                 shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
-                    text =  message,
+                    text = message,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Normal,
                 )
-
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f)) // Push save button to bottom
+        Spacer(modifier = Modifier.weight(1f))
 
-        // Save Button (Blue as in image 4)
+        // Save Button
         Button(
             onClick = {
                 viewModel.updateMessage(textState.text)
                 navController.popBackStack()
             },
             modifier = Modifier
-                .fillMaxWidth(0.7f) // Make it narrower like in the image
+                .fillMaxWidth(0.7f)
                 .padding(vertical = 8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2563EB) // Blue color as shown in image 4
+                containerColor = Color(0xFF2563EB)
             ),
             shape = RoundedCornerShape(18.dp)
         ) {
