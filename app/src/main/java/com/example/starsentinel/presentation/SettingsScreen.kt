@@ -70,12 +70,13 @@ fun SettingsScreen(navController: NavController) {
             }
 
             val settingsItems = listOf(
-                Triple("Safe Zones", "manageGeofences", R.drawable.safe_zone_icon),
                 Triple("Emergency Contacts", "contactsScreen", R.drawable.contact_icon),
                 Triple("Alert Messages", "alertMessageScreen", R.drawable.alert_msg_icon),
                 Triple("Biometric Data", "biometricDataScreen", R.drawable.heart_rate_icon),
                 Triple("Current Location", "locationScreen", R.drawable.safe_zone_icon),
-            )
+                Triple("Safe Zones", "manageGeofences", R.drawable.safe_zone_icon),
+
+                )
 
             items(settingsItems) { (title, route, iconRes) ->
                 SettingItem(
@@ -85,7 +86,7 @@ fun SettingsScreen(navController: NavController) {
                 )
             }
 
-            item {
+/*            item {
                 Box(
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -116,7 +117,7 @@ fun SettingsScreen(navController: NavController) {
                         )
                     }
                 }
-            }
+            } */
         }
     }
 }

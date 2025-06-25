@@ -155,7 +155,7 @@ fun LocationScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Test button
+  /*          // Test button
             Button(
                 onClick = {
                     val alertService = AlertService(context)
@@ -167,6 +167,8 @@ fun LocationScreen(navController: NavController) {
             ) {
                 Text("Test Alert")
             }
+            */
+
         }
 
         /*
