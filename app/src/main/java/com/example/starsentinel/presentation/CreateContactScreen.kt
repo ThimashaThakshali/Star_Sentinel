@@ -78,7 +78,7 @@ fun CreateContactScreen(
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Add Photo section
+        /*    // Add Photo section
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -108,7 +108,7 @@ fun CreateContactScreen(
                     color = Color.White,
                     fontSize = 14.sp
                 )
-            }
+            }    */
 
             // Input fields
             InputFieldSection(
@@ -188,11 +188,41 @@ fun CreateContactScreen(
                 )
             }
 
+            // Delete button (only shown in edit mode)
+            if (isEditMode) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        // Remove the contact
+                        val updatedContacts = contacts.toMutableList().apply {
+                            removeIf { it.phone == existingContact?.phone }
+                        }
+                        contactStorage.saveContacts(updatedContacts)
+                        contacts = contactStorage.getContacts()
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    )
+                ) {
+                    Text(
+                        text = "Delete Contact",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
-
 
 @Composable
 fun InputFieldSection(

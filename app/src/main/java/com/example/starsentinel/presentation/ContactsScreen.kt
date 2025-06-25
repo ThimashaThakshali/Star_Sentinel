@@ -52,8 +52,8 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
 
     Box(
         modifier = Modifier
-        .fillMaxSize()
-        .background(Color.Black)) {
+            .fillMaxSize()
+            .background(Color.Black)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header section (non-scrolling)
             Column(
@@ -231,6 +231,6 @@ fun ContactItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
 
-        )
+            )
     }
-}
+} 
