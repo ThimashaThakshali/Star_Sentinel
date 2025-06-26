@@ -1,0 +1,141 @@
+@startuml
+
+package "com.example.starsentinel.presentation" {
+    class Contact
+    class ContactStorage {
+        -sharedPreferences: SharedPreferences
+        -gson: Gson
+        +saveContact(contact: Contact): void
+        +getContacts(): List<Contact>
+        +getContactByPhone(phone: String): Contact  ' nullable
+    }
+    class MainActivity {
+        -contactStorage: ContactStorage
+        -contacts: MutableState<List<Contact>>
+        -showPermissionDialog: MutableState<Boolean>
+        +onCreate(savedInstanceState: Bundle): void
+        +hasRequiredPermissions(): Boolean
+        +requestAllPermissions(): void
+        -openAppSettings(context: Context): void
+    }
+    class AlertMessageViewModel {
+        -sharedPreferences: SharedPreferences
+        +currentMessage: MutableLiveData<String>
+        +predefinedMessages: MutableLiveData<List<String>>
+        +updateMessage(newMessage: String): void
+    }
+}
+
+package "com.example.starsentinel.alert" {
+    class AlertService {
+        -context: Context
+        -sharedPreferences: SharedPreferences
+        -contactStorage: ContactStorage
+        -locationService: LocationService
+        -lastAlertTimestamp: Long
+        -ALERT_COOLDOWN_MS: Long  ' default 60000
+        +sendAlerts(): void
+        -sendSms(phoneNumber: String, message: String): void
+        -getAlertMessage(): String
+    }
+}
+
+package "com.example.starsentinel.location" {
+    class LocationService {
+        -context: Context
+        -fusedLocationClient: FusedLocationProviderClient
+        -currentLocation: Location  ' nullable
+        -locationUrl: String
+        -currentAddress: String
+        +startLocationUpdates(): void
+        +stopLocationUpdates(): void
+        +getLocationString(): String
+        +getLocationForAlert(): String
+    }
+}
+
+package "com.example.starsentinel.sensor" {
+    class HeartRateSensor {
+        -context: Context
+        -sensorManager: SensorManager
+        -heartRateSensor: Sensor  ' nullable
+        -heartRateProcessor: HeartRateProcessor
+        +startListening(): Boolean
+        +stopListening(): void
+        +hasHeartRateSensor(): Boolean
+        +hasPermission(): Boolean
+    }
+    class HeartRateProcessor {
+        -rrIntervals: MutableList<Long>
+        -lastBeatTimestamp: Long
+        -heartRate: MutableStateFlow<Int>
+        -meanRR: MutableStateFlow<Float>
+        -rmssd: MutableStateFlow<Float>
+        -sdnn: MutableStateFlow<Float>
+        +processBeat(timestamp: Long): void
+        +processHeartRate(bpm: Int): void
+        -calculateMetrics(): void
+    }
+}
+
+package "com.example.starsentinel.audio" {
+    class SpeechDetector {
+        -context: Context
+        -audioRecord: AudioRecord  ' nullable
+        -isRecording: Boolean
+        -audioFeatureExtractor: AudioFeatureExtractor
+        +startListening(): Boolean
+        +stopListening(): void
+        +hasPermission(): Boolean
+    }
+    class AudioFeatureExtractor {
+        -mfccValues: List<Float>
+        -pitchMean: Float
+        -intensityVar: Float
+        +processAudioBuffer(buffer: ShortArray, sampleRate: Int): void
+        -calculateRMS(buffer: ShortArray): Float
+        -calculateIntensityVariance(): void
+        -estimatePitch(buffer: ShortArray, sampleRate: Int): Float
+        -extractMFCC(buffer: ShortArray, sampleRate: Int): void
+    }
+}
+
+package "com.example.starsentinel.detection" {
+    class FearDetector {
+        -context: Context
+        -alertService: AlertService
+        -predictionBuffer: MutableList<Boolean>
+        -previousHeartRate: Int
+        -alertSentForCurrentState: Boolean
+        -fearDetectedTimestamp: Long
+        +processData(
+            heartRate: Int,
+            meanRR: Float,
+            rmssd: Float,
+            sdnn: Float,
+            mfccValues: List<Float>,
+            pitchMean: Float,
+            intensityVar: Float
+        ): void
+        -detectHeartRateChange(currentHeartRate: Int): Boolean
+        -detectScream(mfccValues: List<Float>, pitchMean: Float, intensityVar: Float): Boolean
+        -predictFear(features: List<Float>): Boolean
+    }
+}
+
+' Relationships
+MainActivity --> ContactStorage
+ContactStorage --> Contact
+AlertService --> ContactStorage
+AlertService --> LocationService
+HeartRateSensor --> HeartRateProcessor
+SpeechDetector --> AudioFeatureExtractor
+FearDetector --> AlertService
+FearDetector --> HeartRateProcessor
+FearDetector --> AudioFeatureExtractor
+
+' Dependencies
+MainActivity ..> AlertMessageViewModel
+MainActivity ..> AlertService
+
+@enduml
