@@ -1,6 +1,7 @@
-package com.example.starsentinel.sensor
+package com.example.starsentinel.presentation
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -11,12 +12,12 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * A class to handle heart rate sensor readings from Samsung Galaxy Watch
- * and calculate heart rate variability metrics
+/* The class which  handles the  heart rate sensor readings from the watch
+    and calculates heart rate variability metrics
  */
+
 class HeartRateSensor(private val context: Context) : SensorEventListener {
-    private val TAG = "HeartRateSensor"
+    private val tag = "HeartRateSensor"
     private val sensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val heartRateSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
 
@@ -32,32 +33,33 @@ class HeartRateSensor(private val context: Context) : SensorEventListener {
     // Last heart beat timestamp
     private var lastTimestamp: Long = 0
 
+    @SuppressLint("MissingPermission")
     fun startListening(): Boolean {
-        // Explicitly check for permission before accessing the sensor
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BODY_SENSORS
-            ) != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Body sensors permission not granted")
+        // First check if we have permission
+        if (!hasPermission()) {
+            Log.w(tag, "No body sensors permission")
+            return false
+        }
+
+        // Check if sensor exists on this device
+        if (!hasHeartRateSensor()) {
+            Log.w(tag, "No heart rate sensor found")
             return false
         }
 
         try {
-            heartRateSensor?.let {
-                sensorManager.registerListener(
-                    this,
-                    it,
-                    SensorManager.SENSOR_DELAY_FASTEST  // Use fastest for better HRV accuracy
-                )
-                return true
-            }
-        } catch (securityException: SecurityException) {
-            Log.e(TAG, "Security exception when registering heart rate sensor: ${securityException.message}")
-        } catch (exception: Exception) {
-            Log.e(TAG, "Exception when registering heart rate sensor: ${exception.message}")
+            // Register listener with fastest rate for better accuracy
+            sensorManager.registerListener(
+                this,
+                heartRateSensor,
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
+            Log.d(tag, "Started listening to heart rate sensor")
+            return true
+        } catch (e: Exception) {
+            Log.e(tag, "Error starting sensor: ${e.message}")
+            return false
         }
-
-        return false
     }
 
     fun stopListening() {
@@ -65,7 +67,7 @@ class HeartRateSensor(private val context: Context) : SensorEventListener {
             sensorManager.unregisterListener(this)
             heartRateProcessor.reset()
         } catch (exception: Exception) {
-            Log.e(TAG, "Exception when unregistering heart rate sensor: ${exception.message}")
+            Log.e(tag, "Exception when unregistering heart rate sensor: ${exception.message}")
         }
     }
 
@@ -93,11 +95,11 @@ class HeartRateSensor(private val context: Context) : SensorEventListener {
         // Handle accuracy changes if needed
         when (accuracy) {
             SensorManager.SENSOR_STATUS_ACCURACY_LOW ->
-                Log.w(TAG, "Heart rate sensor accuracy LOW")
+                Log.w(tag, "Heart rate sensor accuracy LOW")
             SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM ->
-                Log.d(TAG, "Heart rate sensor accuracy MEDIUM")
+                Log.d(tag, "Heart rate sensor accuracy MEDIUM")
             SensorManager.SENSOR_STATUS_ACCURACY_HIGH ->
-                Log.d(TAG, "Heart rate sensor accuracy HIGH")
+                Log.d(tag, "Heart rate sensor accuracy HIGH")
         }
     }
 

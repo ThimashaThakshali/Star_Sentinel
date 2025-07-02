@@ -1,8 +1,7 @@
-package com.example.starsentinel.detection
+package com.example.starsentinel.presentation
 
 import android.content.Context
 import android.util.Log
-import com.example.starsentinel.alert.AlertService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,15 +14,16 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import kotlin.math.abs
 
-/**
- * Class responsible for fear detection by combining sensor data and calling the ML model API
- */
+
+// The Class which for fear detection by combining sensor data and calling the ML model API
+
 class FearDetector(private val context: Context) {
-    private val TAG = "FearDetector"
+    private val tag = "FearDetector "
 
-    // Backend API URL - replace with your ngrok URL
-    private val API_URL = "https://f4c5-34-23-184-195.ngrok-free.app/predict"
+    // Backend API URL -  ngrok URL
+    private val apiUrl = "https://cd68-34-16-204-224.ngrok-free.app/predict"
 
     // Flow to expose fear detection state
     private val _isFearDetected = MutableStateFlow(false)
@@ -37,31 +37,35 @@ class FearDetector(private val context: Context) {
 
     // Feature buffer for smoothing predictions
     private val predictionBuffer = mutableListOf<Boolean>()
-    private val BUFFER_SIZE = 5
+    private val bufferSize = 5
 
     // Heart rate change detection
     private var previousHeartRate = 0
-    private val HEART_RATE_INCREASE_THRESHOLD = 15 // Sudden increase of 15 BPM or more
-    private val HEART_RATE_MINIMUM = 65 // Only consider increases above this base rate
+    private val heartRateIncreaseThreshold = 25 // Sudden increase of 15 BPM or more
+    private val heartRateMinimum = 65 // Only consider increases above this base rate
 
     // Scream detection thresholds
-    private val PITCH_SCREAM_THRESHOLD = 300f // High pitch threshold in Hz
-    private val INTENSITY_SCREAM_THRESHOLD = 10f // High intensity threshold in dB
-    private val MFCC_DEVIATION_THRESHOLD = 5f // Threshold for MFCC deviation indicating scream
+    private var previousIntensity: Float = 0f
+    private var previousIntensityTime: Long = 0
+    private val intensityChangeThreshold = 1f // 1 dB change threshold
+    private val maxTimeDiff = 1000L // 1 second window
+    private val pitchScreamThreshold = 400f // High pitch threshold in Hz
+    private val intensityScreamThreshold = 15f  // High intensity threshold in dB
+    private val mfccDeviationThreshold = 5f // Threshold for MFCC deviation indicating scream
 
     // Fear state timeout
     private var fearDetectedTimestamp: Long = 0
-    private val FEAR_STATE_TIMEOUT_MS = 30000 // 30 seconds of fear state before resetting
+    private val fearStateTimeout = 30000 // 30 seconds of fear state before resetting
 
-    /**
-     * Process sensor data to detect fear
-     * @param heartRate Current heart rate in BPM
-     * @param meanRR Mean R-R interval in ms
-     * @param rmssd RMSSD (Root Mean Square of Successive Differences) in ms
-     * @param sdnn SDNN (Standard Deviation of Normal-to-Normal intervals) in ms
-     * @param mfccValues MFCC audio features
-     * @param pitchMean Mean pitch (fundamental frequency) in Hz
-     * @param intensityVar Intensity (volume) variance in dB
+    /*
+        Process sensor data to detect fear
+        heartRate- Current heart rate in BPM
+        meanRR - Mean R-R interval in ms
+        rmssd - RMSSD (Root Mean Square of Successive Differences) in ms
+        sdnn - SDNN (Standard Deviation of Normal-to-Normal intervals) in ms
+        mfccValues - MFCC audio features
+        pitchMean - Mean pitch (fundamental frequency) in Hz
+        intensityVar - Intensity (volume) variance in dB
      */
     fun processData(
         heartRate: Int,
@@ -80,8 +84,13 @@ class FearDetector(private val context: Context) {
         // Check for sudden heart rate increase
         val heartRateIncrease = detectHeartRateChange(heartRate)
 
+
+
         // Check for scream signature in audio
         val screamDetected = detectScream(mfccValues, pitchMean, intensityVar)
+
+        val intensitySpike = detectSuddenIntensityChange(intensityVar)
+
 
         // Create feature vector similar to the model training data
         val hrFeatures = listOf(
@@ -103,12 +112,33 @@ class FearDetector(private val context: Context) {
                 // Get prediction from model
                 val modelPrediction = predictFear(allFeatures)
 
+                if (modelPrediction) {
+                    Log.d(tag, "Model prediction: Fear detected")
+                } else {
+                    Log.d(tag, "Model prediction: No fear detected")
+                }
+                if (heartRateIncrease) {
+                    Log.d(tag, "Heart rate increase detected: $heartRate")
+                } else {
+                    Log.d(tag, "No significant heart rate change")
+                }
+                if (screamDetected) {
+                    Log.d(tag, "Scream detected! Pitch: $pitchMean, Intensity: $intensityVar")
+                } else {
+                    Log.d(tag, "No scream detected")
+                }
+                if (intensitySpike) {
+                    Log.d(tag, "Sudden intensity spike detected: $intensityVar dB")
+                } else {
+                    Log.d(tag, "No sudden intensity change detected")
+                }
+
                 // Combine with rule-based detections
-                val fearDetected = modelPrediction || heartRateIncrease || screamDetected
+                val fearDetected = modelPrediction || heartRateIncrease || screamDetected || intensitySpike
 
                 // Add prediction to buffer
                 predictionBuffer.add(fearDetected)
-                if (predictionBuffer.size > BUFFER_SIZE) {
+                if (predictionBuffer.size > bufferSize) {
                     predictionBuffer.removeAt(0)
                 }
 
@@ -124,36 +154,35 @@ class FearDetector(private val context: Context) {
                     if (!alertSentForCurrentState) {
                         alertService.sendAlerts()
                         alertSentForCurrentState = true
-                        Log.d(TAG, "Alert sent to emergency contacts")
+                        Log.d(tag, "Alert sent to emergency contacts")
                     }
 
-                    Log.d(TAG, "Fear detected! HR: $heartRate, Pitch: $pitchMean, Intensity: $intensityVar")
+                    Log.d(tag, "Fear detected! HR: $heartRate, Pitch: $pitchMean, Intensity: $intensityVar")
                 } else if (_isFearDetected.value) {
                     // Check if fear state should timeout
                     val currentTime = System.currentTimeMillis()
-                    if (currentTime - fearDetectedTimestamp > FEAR_STATE_TIMEOUT_MS && !isFear) {
+                    if (currentTime - fearDetectedTimestamp > fearStateTimeout && !isFear) {
                         _isFearDetected.value = false
                         alertSentForCurrentState = false // Reset the alert sent flag
-                        Log.d(TAG, "Fear state reset after timeout")
+                        Log.d(tag, "Fear state reset after timeout")
                     }
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error in fear detection: ${e.message}")
+                Log.e(tag, "Error in fear detection: ${e.message}")
             }
         }
     }
 
-    /**
-     * Detect sudden increase in heart rate
-     * @param currentHeartRate Current heart rate in BPM
-     * @return True if a sudden increase is detected
+    /* Detect sudden increase in heart rate
+        currentHeartRate - Current heart rate in BPM
+        True if a sudden increase is detected
      */
     private fun detectHeartRateChange(currentHeartRate: Int): Boolean {
-        val result = if (previousHeartRate > HEART_RATE_MINIMUM &&
+        val result = if ( previousHeartRate != 0 && previousHeartRate > heartRateMinimum &&
             currentHeartRate > previousHeartRate &&
-            currentHeartRate - previousHeartRate >= HEART_RATE_INCREASE_THRESHOLD) {
-            Log.d(TAG, "Sudden heart rate increase detected: $previousHeartRate -> $currentHeartRate")
+            currentHeartRate - previousHeartRate >= heartRateIncreaseThreshold) {
+            Log.d(tag, "Sudden heart rate increase detected: $previousHeartRate -> $currentHeartRate")
             true
         } else {
             false
@@ -163,42 +192,36 @@ class FearDetector(private val context: Context) {
         return result
     }
 
-    /**
-     * Detect scream signature in audio features
-     * @param mfccValues MFCC audio features
-     * @param pitchMean Mean pitch in Hz
-     * @param intensityVar Intensity variance in dB
-     * @return True if a scream is detected
+    /* Detect scream signature in audio features
+        mfccValues - MFCC audio features
+        pitchMean -  Mean pitch in Hz
+        intensityVar -  Intensity variance in dB
+        True if a scream is detected
      */
     private fun detectScream(mfccValues: List<Float>, pitchMean: Float, intensityVar: Float): Boolean {
         // Check for high pitch + high intensity (scream signature)
-        val isPitchHigh = pitchMean > PITCH_SCREAM_THRESHOLD
-        val isIntensityHigh = intensityVar > INTENSITY_SCREAM_THRESHOLD
+        val isPitchHigh = pitchMean > pitchScreamThreshold
+        val isIntensityHigh = intensityVar > intensityScreamThreshold
 
         // Check for extreme MFCC deviation (another indicator of scream)
         var mfccDeviation = false
         if (mfccValues.isNotEmpty()) {
             // Calculate deviation of first MFCC coefficient (related to energy)
-            mfccDeviation = Math.abs(mfccValues[0]) > MFCC_DEVIATION_THRESHOLD
+            mfccDeviation = abs(mfccValues[0]) > mfccDeviationThreshold
         }
 
         val screamDetected = (isPitchHigh && isIntensityHigh) || (isIntensityHigh && mfccDeviation)
 
-        if (screamDetected) {
-            Log.d(TAG, "Scream detected! Pitch: $pitchMean, Intensity: $intensityVar")
-        }
-
         return screamDetected
     }
 
-    /**
-     * Send features to the backend model and get fear prediction
-     * @param features List of features to send to the model
-     * @return True if fear is detected, false otherwise
+    /* Send features to the backend model and get fear prediction
+      features List of features to send to the model
+      True if fear is detected, false otherwise
      */
     private fun predictFear(features: List<Float>): Boolean {
         try {
-            val url = URL(API_URL)
+            val url = URL(apiUrl)
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
             connection.doOutput = true
@@ -230,18 +253,38 @@ class FearDetector(private val context: Context) {
                     return prediction == 1
                 }
             } else {
-                Log.e(TAG, "HTTP error: $responseCode")
+                Log.e(tag, "HTTP error: $responseCode")
                 return false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error calling prediction API: ${e.message}")
+            Log.e(tag, "Error calling prediction API: ${e.message}")
             return false
         }
     }
 
-    /**
-     * Reset the detector state
+    /* Detects sudden intensity changes (1dB+ within 1 second)
+       Similar to heart rate sudden change detection
      */
+    private fun detectSuddenIntensityChange(currentIntensity: Float): Boolean {
+        val currentTime = System.currentTimeMillis()
+
+        // Only check if we have a previous reading and it's within 1 second
+        if (previousIntensity != 0f && (currentTime - previousIntensityTime) <= maxTimeDiff) {
+
+            val intensityDiff = abs(currentIntensity - previousIntensity)
+            if (intensityDiff >= intensityChangeThreshold) {
+                Log.d(tag, "Sudden intensity change: ${previousIntensity}dB -> ${currentIntensity}dB")
+                return true
+            }
+        }
+
+        // Update previous values
+        previousIntensity = currentIntensity
+        previousIntensityTime = currentTime
+        return false
+    }
+
+    // Reset the detector state
     fun reset() {
         predictionBuffer.clear()
         _isFearDetected.value = false

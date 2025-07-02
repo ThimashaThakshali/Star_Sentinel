@@ -45,9 +45,9 @@ fun SetGeofenceScreen(navController: NavController) {
 
     var name by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
-    var radius by remember { mutableStateOf(100f) }
+    var radius by remember { mutableFloatStateOf(100f) }
     var location by remember { mutableStateOf<LatLng?>(null) }
-    var geofenceId by remember { mutableStateOf(UUID.randomUUID().toString()) }
+    val geofenceId by remember { mutableStateOf(UUID.randomUUID().toString()) }
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(37.42, -122.08), 10f)
@@ -364,7 +364,7 @@ private fun saveAndCreateGeofence(
 ) {
     val geofenceData = GeofenceData().apply {
         this.id = id
-        this.name = if (name.isEmpty()) "Safe Zone" else name
+        this.name = name.ifEmpty { "Safe Zone" }
         this.latitude = latLng.latitude
         this.longitude = latLng.longitude
         this.radius = radius

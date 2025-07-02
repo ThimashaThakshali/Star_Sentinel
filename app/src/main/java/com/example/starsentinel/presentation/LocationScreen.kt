@@ -16,18 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.starsentinel.R
-import com.example.starsentinel.location.LocationService
-import com.example.starsentinel.alert.AlertService
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun LocationScreen(navController: NavController) {
+fun LocationScreen() {
     val context = LocalContext.current
     val locationService = remember { LocationService(context) }
     val currentLocation by locationService.currentLocation.collectAsState()
-    val locationUrl by locationService.locationUrl.collectAsState()
     val currentAddress by locationService.currentAddress.collectAsState()
 
     // Start location updates

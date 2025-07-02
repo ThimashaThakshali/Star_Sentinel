@@ -1,4 +1,3 @@
-// ContactsScreen.kt
 package com.example.starsentinel.presentation
 
 import androidx.compose.foundation.background
@@ -36,8 +35,7 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
     val context = LocalContext.current
     val contactStorage = remember { ContactStorage(context) }
     var searchQuery by remember { mutableStateOf("") }
-    var contacts by remember { mutableStateOf(contactStorage.getContacts()) }
-
+    val contacts by remember { mutableStateOf(contactStorage.getContacts()) }
     // Filter contacts in real-time
     val filteredContacts by remember(contacts, searchQuery) {
         derivedStateOf {
@@ -60,7 +58,7 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .verticalScroll(rememberScrollState()), // Enables scrolling
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -77,17 +75,16 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.extraLarge) // Use one consistent shape
+                        .clip(MaterialTheme.shapes.extraLarge)
                         .background(Color(0xFF303030))
                         .border(
                             width = 1.dp,
-                            color = Color(0xFF5F6368), // Use the gray color from the image
-                            shape = MaterialTheme.shapes.extraLarge // Match the clip shape
+                            color = Color(0xFF5F6368),
+                            shape = MaterialTheme.shapes.extraLarge
                         )
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Search icon
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
@@ -95,7 +92,6 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                         modifier = Modifier.size(20.dp)
                     )
 
-                    // Search text field
                     BasicTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
@@ -112,7 +108,7 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                                         text = "Search",
                                         color = Color.LightGray,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp) // Add padding here
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
                                 }
                                 innerTextField()
@@ -121,7 +117,6 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                         singleLine = true,
                     )
 
-                    // X button to clear search (only shows when there's text)
                     if (searchQuery.isNotEmpty()) {
                         IconButton(
                             onClick = { searchQuery = "" },
@@ -137,29 +132,25 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                 }
             }
 
-            // Contacts list or empty state
             if (filteredContacts.isEmpty()) {
-                // Empty state - just display empty space
                 Spacer(modifier = Modifier.weight(1f))
             } else {
-                // Contacts list (scrolling) - only show if we have contacts
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f) // Takes remaining space
+                        .weight(1f)
                 ) {
                     items(
                         items = filteredContacts,
-                        key = { it.hashCode() } // Stable keys for performance
+                        key = { contact -> contact.id  } // Use phone as unique key
                     ) { contact ->
                         ContactItem(
                             contact = contact,
                             onClick= {
-                                // Navigate to edit screen with contact details
                                 navController.navigate("editContact/${contact.phone}")
                             }
                         )
-                        Spacer(modifier = Modifier.height(8.dp)) // Add spacing between contacts
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                     item {
                         Spacer(modifier = Modifier.height(26.dp))
@@ -168,15 +159,13 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
             }
         }
 
-        // Floating Action Button (positioned absolutely) - made smaller with new color
         FloatingActionButton(
             onClick = { navController.navigate("createContact") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(25.dp)
-                .size(40.dp), // Make it smaller
+                .size(40.dp),
             containerColor = Color(0xFF2563EB)
-
         ) {
             Icon(
                 Icons.Default.Add,
@@ -185,7 +174,6 @@ fun ContactsScreen(navController: NavController, onContactUpdated: () -> Unit ) 
                 modifier = Modifier.size(24.dp)
             )
         }
-
     }
 }
 
@@ -197,13 +185,12 @@ fun ContactItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(24.dp)) // Rounded corners to match image
-            .background(Color(0xFF49454F)) // Set the background color as requested
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFF49454F))
             .padding(vertical = 12.dp, horizontal = 16.dp)
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar placeholder circle
         Box(
             modifier = Modifier
                 .size(25.dp)
@@ -212,7 +199,7 @@ fun ContactItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.crontacts_icon), // Make sure you have this resource
+                painter = painterResource(id = R.drawable.crontacts_icon),
                 contentDescription = "Contact",
                 tint = Color.White,
                 modifier = Modifier.size(24.dp)
@@ -221,7 +208,6 @@ fun ContactItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Contact name - display the actual contact name
         Text(
             text = "${contact.firstName} ${contact.lastName}",
             style = MaterialTheme.typography.bodyLarge.copy(
@@ -230,7 +216,6 @@ fun ContactItem(
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-
-            )
+        )
     }
-} 
+}

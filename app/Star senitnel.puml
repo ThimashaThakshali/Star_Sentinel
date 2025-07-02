@@ -1,7 +1,11 @@
 @startuml
-
-package "com.example.starsentinel.presentation" {
-    class Contact
+    class Contact {
+        +id: String
+        +firstName: String
+        +lastName: String
+        +phone: String
+        +email: String
+    }
     class ContactStorage {
         -sharedPreferences: SharedPreferences
         -gson: Gson
@@ -24,9 +28,8 @@ package "com.example.starsentinel.presentation" {
         +predefinedMessages: MutableLiveData<List<String>>
         +updateMessage(newMessage: String): void
     }
-}
 
-package "com.example.starsentinel.alert" {
+
     class AlertService {
         -context: Context
         -sharedPreferences: SharedPreferences
@@ -38,9 +41,8 @@ package "com.example.starsentinel.alert" {
         -sendSms(phoneNumber: String, message: String): void
         -getAlertMessage(): String
     }
-}
 
-package "com.example.starsentinel.location" {
+
     class LocationService {
         -context: Context
         -fusedLocationClient: FusedLocationProviderClient
@@ -52,9 +54,8 @@ package "com.example.starsentinel.location" {
         +getLocationString(): String
         +getLocationForAlert(): String
     }
-}
 
-package "com.example.starsentinel.sensor" {
+
     class HeartRateSensor {
         -context: Context
         -sensorManager: SensorManager
@@ -76,9 +77,8 @@ package "com.example.starsentinel.sensor" {
         +processHeartRate(bpm: Int): void
         -calculateMetrics(): void
     }
-}
 
-package "com.example.starsentinel.audio" {
+
     class SpeechDetector {
         -context: Context
         -audioRecord: AudioRecord  ' nullable
@@ -98,9 +98,8 @@ package "com.example.starsentinel.audio" {
         -estimatePitch(buffer: ShortArray, sampleRate: Int): Float
         -extractMFCC(buffer: ShortArray, sampleRate: Int): void
     }
-}
 
-package "com.example.starsentinel.detection" {
+
     class FearDetector {
         -context: Context
         -alertService: AlertService
@@ -121,7 +120,7 @@ package "com.example.starsentinel.detection" {
         -detectScream(mfccValues: List<Float>, pitchMean: Float, intensityVar: Float): Boolean
         -predictFear(features: List<Float>): Boolean
     }
-}
+
 
 ' Relationships
 MainActivity --> ContactStorage
@@ -139,3 +138,4 @@ MainActivity ..> AlertMessageViewModel
 MainActivity ..> AlertService
 
 @enduml
+

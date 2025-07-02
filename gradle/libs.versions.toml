@@ -3,6 +3,7 @@ agp = "8.9.1"
 gson = "2.10.1"
 healthdata = "6.9.0"
 healthdataKotlin = "1.0.0"
+healthServicesClient = "1.0.0"
 json = "20210307"
 kotlin = "2.0.21"
 kotlinxCoroutinesAndroid = "1.9.0"
@@ -30,6 +31,7 @@ compiler = "3.2.0-alpha11"
 
 [libraries]
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+health-services-client = { module = "androidx.health:health-services-client", version.ref = "healthServicesClient" }
 healthdata = { module = "com.samsung.android.sdk.healthdata:healthdata", version.ref = "healthdata" }
 healthdata-kotlin = { module = "com.samsung.android.sdk.healthdata:healthdata-kotlin", version.ref = "healthdataKotlin" }
 json = { module = "org.json:json", version.ref = "json" }

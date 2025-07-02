@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -15,19 +14,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.starsentinel.R
-import android.widget.Toast
+import java.util.UUID
 
 @Composable
 fun CreateContactScreen(
@@ -43,6 +39,7 @@ fun CreateContactScreen(
         phone?.let { contactStorage.getContactByPhone(it) }
     }
 
+    val id  = UUID.randomUUID().toString()
     var firstName by remember { mutableStateOf(existingContact?.firstName ?: "") }
     var lastName by remember { mutableStateOf(existingContact?.lastName ?: "") }
     var phoneNumber by remember { mutableStateOf(existingContact?.phone ?: "") }
@@ -155,7 +152,7 @@ fun CreateContactScreen(
             Button(
                 onClick = {
                     if (firstName.isNotBlank() && phoneNumber.isNotBlank() && isPhoneValid && isEmailValid) {
-                        val newContact = Contact(firstName, lastName, phoneNumber, email)
+                        val newContact = Contact(id,firstName, lastName, phoneNumber, email)
 
                         if (isEditMode) {
                             // Remove old contact if editing
@@ -196,7 +193,7 @@ fun CreateContactScreen(
                     onClick = {
                         // Remove the contact
                         val updatedContacts = contacts.toMutableList().apply {
-                            removeIf { it.phone == existingContact?.phone }
+                            removeIf { it.id == existingContact?.id }
                         }
                         contactStorage.saveContacts(updatedContacts)
                         contacts = contactStorage.getContacts()

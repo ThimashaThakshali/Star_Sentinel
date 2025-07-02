@@ -2,7 +2,6 @@ package com.example.starsentinel.presentation
 
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.core.content.edit

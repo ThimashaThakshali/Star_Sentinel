@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.starsentinel"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.starsentinel"
@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.lottie.compose)
     implementation (libs.okhttp)
     implementation (libs.json)
+    implementation(libs.health.services.client)
 
 
 }

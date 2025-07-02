@@ -1,4 +1,4 @@
-package com.example.starsentinel.sensor
+package com.example.starsentinel.presentation
 
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,14 +7,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-/**
- * Class to calculate Heart Rate Variability (HRV) metrics from heart beat timestamps
- */
+// The Class which calculates the Heart Rate Variability (HRV) metrics from heart beat timestamps
+
 class HeartRateProcessor {
-    private val TAG = "HeartRateProcessor"
+    private val tag = "HeartRateProcessor"
 
     // Window size for RR intervals (beats)
-    private val WINDOW_SIZE = 60
+    private val windowsize = 60
 
     // RR intervals list (in milliseconds)
     private val rrIntervals = mutableListOf<Long>()
@@ -44,7 +43,7 @@ class HeartRateProcessor {
                 rrIntervals.add(rrInterval)
 
                 // Keep only the last WINDOW_SIZE intervals
-                if (rrIntervals.size > WINDOW_SIZE) {
+                if (rrIntervals.size > windowsize) {
                     rrIntervals.removeAt(0)
                 }
 
@@ -109,7 +108,7 @@ class HeartRateProcessor {
                 _rmssd.value = rmssd.toFloat()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error calculating HRV metrics: ${e.message}")
+            Log.e(tag, "Error calculating HRV metrics: ${e.message}")
         }
     }
 

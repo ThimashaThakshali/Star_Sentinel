@@ -1,24 +1,22 @@
-package com.example.starsentinel.alert
+package com.example.starsentinel.presentation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
-import com.example.starsentinel.location.LocationService
-import com.example.starsentinel.presentation.Contact
-import com.example.starsentinel.presentation.ContactStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
-/**
- * Service responsible for sending WhatsApp alerts to emergency contacts
- * Optimized for Wear OS on Samsung Galaxy Watch 5
+/* class which is  responsible for sending WhatsApp alerts to emergency contacts
+  Optimized for Wear OS on Samsung Galaxy Watch 5
  */
 class WhatsAppAlertService(private val context: Context) {
-    private val TAG = "WhatsAppAlertService"
+    private val tag = "WhatsAppAlertService"
 
     // Shared preferences for accessing saved alert message
     private val sharedPreferences: SharedPreferences =
@@ -32,36 +30,35 @@ class WhatsAppAlertService(private val context: Context) {
 
     // Track last alert time to prevent spam
     private var lastAlertTimestamp = 0L
-    private val ALERT_COOLDOWN_MS = 60000 // 1 minute cooldown between alerts
+    private val alertCoolDownMS = 60000 // 1 minute cooldown between alerts
 
     init {
         // Start location updates when service is created
         locationService.startLocationUpdates()
     }
 
-    /**
-     * Send alert messages to all emergency contacts via WhatsApp
-     */
+    // Send alert messages to all emergency contacts via WhatsApp
+
     fun sendAlerts() {
         val currentTime = System.currentTimeMillis()
 
         // Check cooldown to prevent rapid repeated alerts
-        if (currentTime - lastAlertTimestamp < ALERT_COOLDOWN_MS) {
-            Log.d(TAG, "Alert on cooldown, skipping")
+        if (currentTime - lastAlertTimestamp < alertCoolDownMS) {
+            Log.d(tag, "Alert on cooldown, skipping")
             return
         }
 
         // Get the current alert message
         val alertMessage = getAlertMessage()
         if (alertMessage.isEmpty()) {
-            Log.e(TAG, "No alert message found")
+            Log.e(tag, "No alert message found")
             return
         }
 
         // Get all contacts
         val contacts = contactStorage.getContacts()
         if (contacts.isEmpty()) {
-            Log.e(TAG, "No emergency contacts found")
+            Log.e(tag, "No emergency contacts found")
             return
         }
 
@@ -74,18 +71,18 @@ class WhatsAppAlertService(private val context: Context) {
             try {
                 sendWhatsAppToContacts(contacts, fullMessage)
                 lastAlertTimestamp = currentTime
-                Log.d(TAG, "WhatsApp alerts attempted for ${contacts.size} contacts")
+                Log.d(tag, "WhatsApp alerts attempted for ${contacts.size} contacts")
             } catch (e: Exception) {
-                Log.e(TAG, "Error sending WhatsApp alerts: ${e.message}")
+                Log.e(tag, "Error sending WhatsApp alerts: ${e.message}")
                 // Show toast on error
                 Toast.makeText(context, "Failed to send WhatsApp alerts", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    /**
-     * Send WhatsApp messages to list of contacts using Wear OS compatible method
-     */
+    // Send WhatsApp messages to list of contacts using Wear OS compatible method
+
+    @SuppressLint("WearRecents")
     private fun sendWhatsAppToContacts(contacts: List<Contact>, message: String) {
         for (contact in contacts) {
             if (contact.phone.isNotBlank()) {
@@ -98,38 +95,38 @@ class WhatsAppAlertService(private val context: Context) {
                         // This uses the WhatsApp companion app directly
                         val intent = Intent(Intent.ACTION_VIEW).apply {
                             setPackage("com.whatsapp")
-                            data = Uri.parse("content://com.android.contacts/data/$formattedPhone")
+                            data = "content://com.android.contacts/data/$formattedPhone".toUri()
                             putExtra("jid", "$formattedPhone@s.whatsapp.net")
                             putExtra("message", message)
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                         context.startActivity(intent)
-                        Log.d(TAG, "Direct WhatsApp intent for ${contact.firstName}")
+                        Log.d(tag, "Direct WhatsApp intent for ${contact.firstName}")
                     } catch (e: Exception) {
-                        Log.e(TAG, "Direct intent failed: ${e.message}")
+                        Log.e(tag, "Direct intent failed: ${e.message}")
 
                         // Fallback to universal WhatsApp URL method
                         try {
-                            val uri = Uri.parse("https://wa.me/$formattedPhone/?text=${Uri.encode(message)}")
+                            val uri =
+                                "https://wa.me/$formattedPhone/?text=${Uri.encode(message)}".toUri()
                             val fallbackIntent = Intent(Intent.ACTION_VIEW, uri).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
                             context.startActivity(fallbackIntent)
-                            Log.d(TAG, "Fallback WhatsApp web for ${contact.firstName}")
+                            Log.d(tag, "Fallback WhatsApp web for ${contact.firstName}")
                         } catch (e2: Exception) {
-                            Log.e(TAG, "Fallback also failed: ${e2.message}")
+                            Log.e(tag, "Fallback also failed: ${e2.message}")
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to send WhatsApp to ${contact.phone}: ${e.message}")
+                    Log.e(tag, "Failed to send WhatsApp to ${contact.phone}: ${e.message}")
                 }
             }
         }
     }
 
-    /**
-     * Clean phone number for WhatsApp by removing non-digits but preserving the valid country code
-     */
+    // Clean phone number for WhatsApp by removing non-digits but preserving the valid country code
+
     private fun cleanPhoneNumber(phone: String): String {
         // Remove all non-digit characters except the + at the beginning
         val cleanedPhone = phone.replace(Regex("[^0-9+]"), "")
@@ -144,9 +141,8 @@ class WhatsAppAlertService(private val context: Context) {
         }
     }
 
-    /**
-     * Get the currently set alert message from SharedPreferences
-     */
+    // Get the currently set alert message from SharedPreferences
+
     private fun getAlertMessage(): String {
         return sharedPreferences.getString("alertMessage", "I might be in danger...") ?: "I might be in danger..."
     }

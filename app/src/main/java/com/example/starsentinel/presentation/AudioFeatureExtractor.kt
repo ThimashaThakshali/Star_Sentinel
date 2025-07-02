@@ -1,21 +1,17 @@
-package com.example.starsentinel.audio
+package com.example.starsentinel.presentation
 
-import android.media.AudioFormat
-import android.media.AudioRecord
+
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlin.math.abs
-import kotlin.math.ln
 import kotlin.math.log10
 import kotlin.math.sqrt
 
-/**
- * Class to extract audio features from raw audio data
- */
+// The Class which extracts audio features from raw audio data
+
 class AudioFeatureExtractor {
-    private val TAG = "AudioFeatureExtractor"
+    private val tag = "AudioFeatureExtractor"
 
     // MFCC features
     private val _mfccValues = MutableStateFlow(List(13) { 0f })
@@ -31,13 +27,10 @@ class AudioFeatureExtractor {
 
     // Buffer for intensity values to calculate variance
     private val intensityBuffer = mutableListOf<Float>()
-    private val MAX_BUFFER_SIZE = 50
+    private val maxBufferSize = 50
 
-    /**
-     * Process a buffer of audio samples
-     * @param buffer The audio sample buffer
-     * @param sampleRate The audio sample rate in Hz
-     */
+    //Process a buffer of audio samples
+
     fun processAudioBuffer(buffer: ShortArray, sampleRate: Int) {
         try {
             // Calculate signal intensity (RMS)
@@ -45,7 +38,7 @@ class AudioFeatureExtractor {
 
             // Add to intensity buffer
             intensityBuffer.add(rms)
-            if (intensityBuffer.size > MAX_BUFFER_SIZE) {
+            if (intensityBuffer.size > maxBufferSize) {
                 intensityBuffer.removeAt(0)
             }
 
@@ -62,13 +55,12 @@ class AudioFeatureExtractor {
             extractMFCC(buffer, sampleRate)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing audio buffer: ${e.message}")
+            Log.e(tag, "Error processing audio buffer: ${e.message}")
         }
     }
 
-    /**
-     * Calculate RMS (Root Mean Square) of audio buffer
-     */
+    // Calculate RMS (Root Mean Square) of audio buffer
+
     private fun calculateRMS(buffer: ShortArray): Float {
         var sum = 0.0
         for (sample in buffer) {
@@ -78,9 +70,8 @@ class AudioFeatureExtractor {
         return sqrt(mean).toFloat()
     }
 
-    /**
-     * Calculate intensity variance from buffer of RMS values
-     */
+    // Calculate intensity variance from buffer of RMS values
+
     private fun calculateIntensityVariance() {
         if (intensityBuffer.size < 2) return
 
@@ -98,9 +89,7 @@ class AudioFeatureExtractor {
         _intensityVar.value = 20 * log10(variance + 1) // +1 to avoid log(0)
     }
 
-    /**
-     * Estimate pitch using zero-crossing rate
-     * This is a simplified method - actual pitch detection would use more sophisticated algorithms
+    /* Estimate pitch using zero-crossing rate.
      */
     private fun estimatePitch(buffer: ShortArray, sampleRate: Int): Float {
         var zeroCrossings = 0
@@ -119,21 +108,9 @@ class AudioFeatureExtractor {
         return if (frequency in 80f..400f) frequency else 0f
     }
 
-    /**
-     * Extract MFCC features (simplified)
-     * Note: Real MFCC extraction is complex and typically uses libraries like TarsosDSP
-     * This is a placeholder implementation
-     */
+    // Extract MFCC features (simplified)
+
     private fun extractMFCC(buffer: ShortArray, sampleRate: Int) {
-        // This is a simplified placeholder - doesn't actually compute real MFCCs
-        // In a real implementation, you would:
-        // 1. Apply pre-emphasis filter
-        // 2. Frame the signal
-        // 3. Apply window function (e.g., Hamming)
-        // 4. Compute FFT
-        // 5. Apply Mel filterbank
-        // 6. Take log
-        // 7. Apply DCT
 
         // Generate placeholder MFCC values that respond to audio energy
         val energy = calculateRMS(buffer)
@@ -152,9 +129,7 @@ class AudioFeatureExtractor {
         _mfccValues.value = newMfccs
     }
 
-    /**
-     * Reset the extractor state
-     */
+    // Reset the extractor state
     fun reset() {
         intensityBuffer.clear()
         _pitchMean.value = 0f

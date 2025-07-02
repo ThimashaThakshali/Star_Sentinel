@@ -1,6 +1,5 @@
 package com.example.starsentinel.presentation
 
-import SettingsScreen
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
@@ -204,7 +203,7 @@ fun AppNavigation(
         composable("manageGeofences") { ManageGeofencesScreen(navController) }
         composable("homeScreen") { HomeScreen(navController) }
         composable("settingsScreen") { SettingsScreen(navController) }
-        composable("locationScreen") { LocationScreen(navController) }
+        composable("locationScreen") { LocationScreen() }
         composable("biometricDataScreen") { BiometricDataScreen(navController) }
 
     }

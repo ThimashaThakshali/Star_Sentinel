@@ -1,3 +1,5 @@
+package com.example.starsentinel.presentation
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,15 +23,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.starsentinel.R
-import com.example.starsentinel.location.LocationService
 
 @SuppressLint("DefaultLocale")
 @Composable
 fun SettingsScreen(navController: NavController) {
-    var autoSendEnabled by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val locationService = remember { LocationService(context) }
-    val currentLocation by locationService.currentLocation.collectAsState()
 
     // Start location updates to display current location
     LaunchedEffect(key1 = Unit) {

@@ -1,4 +1,4 @@
-package com.example.starsentinel.audio
+package com.example.starsentinel.presentation
 
 import android.Manifest
 import android.content.Context
@@ -17,15 +17,14 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import kotlin.math.abs
 
-/**
- * A class to detect speech activity using audio input and extract audio features
- */
+// A class to detect speech activity using audio input and extract audio features
+
 class SpeechDetector(private val context: Context) {
-    private val TAG = "SpeechDetector"
-    private val SAMPLE_RATE = 16000
-    private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
-    private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
-    private val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+    private val tag = "SpeechDetector"
+    private val sampleRate = 16000
+    private val channelConfig = AudioFormat.CHANNEL_IN_MONO
+    private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+    private val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
     private var audioRecord: AudioRecord? = null
     private var isRecording = false
@@ -39,8 +38,8 @@ class SpeechDetector(private val context: Context) {
     val pitchMean = audioFeatureExtractor.pitchMean
     val intensityVar = audioFeatureExtractor.intensityVar
 
-    private val AMPLITUDE_THRESHOLD = 1500 // Adjust this threshold based on testing
-    private val SPEECH_TIMEOUT_MS = 1000 // Time without speech before considering it ended
+    private val amplitudeThreshold = 1500 // Adjust this threshold based on testing
+    private val speechTimeoutMS = 1000 // Time without speech before considering it ended
 
     fun startListening(): Boolean {
         if (isRecording) return true
@@ -50,21 +49,21 @@ class SpeechDetector(private val context: Context) {
                 context,
                 Manifest.permission.RECORD_AUDIO
             ) != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Record audio permission not granted")
+            Log.e(tag, "Record audio permission not granted")
             return false
         }
 
         try {
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
-                SAMPLE_RATE,
-                CHANNEL_CONFIG,
-                AUDIO_FORMAT,
-                BUFFER_SIZE
+                sampleRate,
+                channelConfig,
+                audioFormat,
+                bufferSize
             )
 
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
-                Log.e(TAG, "AudioRecord not initialized")
+                Log.e(tag, "AudioRecord not initialized")
                 return false
             }
 
@@ -76,11 +75,11 @@ class SpeechDetector(private val context: Context) {
             }
             return true
         } catch (securityException: SecurityException) {
-            Log.e(TAG, "Security exception when starting microphone: ${securityException.message}")
+            Log.e(tag, "Security exception when starting microphone: ${securityException.message}")
         } catch (ioException: IOException) {
-            Log.e(TAG, "IO exception when starting microphone: ${ioException.message}")
+            Log.e(tag, "IO exception when starting microphone: ${ioException.message}")
         } catch (exception: Exception) {
-            Log.e(TAG, "Error starting speech detection: ${exception.message}")
+            Log.e(tag, "Error starting speech detection: ${exception.message}")
         }
 
         return false
@@ -94,17 +93,17 @@ class SpeechDetector(private val context: Context) {
             audioRecord = null
             audioFeatureExtractor.reset()
         } catch (exception: Exception) {
-            Log.e(TAG, "Error stopping speech detection: ${exception.message}")
+            Log.e(tag, "Error stopping speech detection: ${exception.message}")
         }
     }
 
     private fun processAudio() {
-        val buffer = ShortArray(BUFFER_SIZE)
+        val buffer = ShortArray(bufferSize)
         var lastSpeechTime = System.currentTimeMillis()
 
         while (isRecording) {
             try {
-                val readSize = audioRecord?.read(buffer, 0, BUFFER_SIZE) ?: 0
+                val readSize = audioRecord?.read(buffer, 0, bufferSize) ?: 0
                 if (readSize > 0) {
                     // Calculate average amplitude
                     var sum = 0.0
@@ -114,7 +113,7 @@ class SpeechDetector(private val context: Context) {
                     val average = sum / readSize
 
                     val currentTime = System.currentTimeMillis()
-                    val speechDetected = average > AMPLITUDE_THRESHOLD
+                    val speechDetected = average > amplitudeThreshold
 
                     if (speechDetected) {
                         lastSpeechTime = currentTime
@@ -123,16 +122,16 @@ class SpeechDetector(private val context: Context) {
                         }
 
                         // Process audio features when speech is detected
-                        audioFeatureExtractor.processAudioBuffer(buffer, SAMPLE_RATE)
-                    } else if (_isSpeechDetected.value && (currentTime - lastSpeechTime > SPEECH_TIMEOUT_MS)) {
+                        audioFeatureExtractor.processAudioBuffer(buffer, sampleRate)
+                    } else if (_isSpeechDetected.value && (currentTime - lastSpeechTime > speechTimeoutMS)) {
                         _isSpeechDetected.value = false
                     }
                 }
             } catch (securityException: SecurityException) {
-                Log.e(TAG, "Security exception while processing audio: ${securityException.message}")
+                Log.e(tag, "Security exception while processing audio: ${securityException.message}")
                 break
             } catch (exception: Exception) {
-                Log.e(TAG, "Error processing audio: ${exception.message}")
+                Log.e(tag, "Error processing audio: ${exception.message}")
                 break
             }
 

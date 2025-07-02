@@ -1,9 +1,11 @@
 package com.example.starsentinel.presentation
 
+import android.annotation.SuppressLint
+import android.content.ContentValues.TAG
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import android.widget.Toast
+import android.util.Log
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -20,7 +22,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,18 +31,15 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.starsentinel.R
-import com.example.starsentinel.alert.AlertService
-import com.example.starsentinel.sensor.HeartRateSensor
-import com.example.starsentinel.audio.SpeechDetector
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.sin
-import com.example.starsentinel.detection.FearDetector
 
+@SuppressLint("WearRecents")
 @Composable
 fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
 
     // Create and remember sensor instances
@@ -65,6 +63,9 @@ fun HomeScreen(navController: NavController) {
     val mfccValues by speechDetector.mfccValues.collectAsState(initial = List(13) { 0f })
     val pitchMean by speechDetector.pitchMean.collectAsState(initial = 0f)
     val intensityVar by speechDetector.intensityVar.collectAsState(initial = 0f)
+
+    // Track sensor availability state
+    var hasHeartRateSensor by remember { mutableStateOf(false) }
 
     // State variables
     val isFearDetected by fearDetector.isFearDetected.collectAsState(initial = false)
@@ -95,6 +96,17 @@ fun HomeScreen(navController: NavController) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
+
+                    // Check sensor availability first
+                    hasHeartRateSensor = heartRateSensor.hasHeartRateSensor()
+
+                    if (heartRateSensor.hasPermission() && hasHeartRateSensor) {
+                        val started = heartRateSensor.startListening()
+                        if (!started) {
+                            Log.w(TAG, "Failed to start heart rate sensor")
+                        }
+                    }
+
                     // Check permissions and start sensors
                     val neededPermissions = mutableListOf<String>()
 

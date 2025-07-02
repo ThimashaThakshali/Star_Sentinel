@@ -1,5 +1,6 @@
 package com.example.starsentinel.presentation
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,20 +19,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.starsentinel.R
-import com.example.starsentinel.audio.SpeechDetector
-import com.example.starsentinel.sensor.HeartRateSensor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 
+@SuppressLint("WearRecents")
 @Composable
 fun BiometricDataScreen(navController: NavController) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     // Create and remember sensor instances
     val heartRateSensor = remember { HeartRateSensor(context) }
@@ -194,7 +193,7 @@ fun BiometricDataScreen(navController: NavController) {
 
                 mfccValues.forEachIndexed { index, value ->
                     if (index < 5) {  // Show only the first 5 coefficients to save space
-                        BiometricDataRow("MFCC $index", if (value != 0f) "${"%.2f".format(value)}" else "--")
+                        BiometricDataRow("MFCC $index", if (value != 0f) "%.2f".format(value) else "--")
                     }
                 }
 
@@ -269,10 +268,10 @@ fun BiometricSection(
                 )
             }
 
-            Divider(
-                color = Color.DarkGray,
+            HorizontalDivider(
+                modifier = Modifier.padding(bottom = 12.dp),
                 thickness = 1.dp,
-                modifier = Modifier.padding(bottom = 12.dp)
+                color = Color.DarkGray
             )
 
             content()
