@@ -39,11 +39,13 @@ class FearDetector(private val context: Context) {
     private val predictionBuffer = mutableListOf<Boolean>()
     private val bufferSize = 5
 
+    // Heart rate: How does it increase during stress? (2023). Available at: https://www.medicalnewstoday.com/articles/average-heart-rate-when-stressed (Accessed: 3 July 2025).
     // Heart rate change detection
     private var previousHeartRate = 0
     private val heartRateIncreaseThreshold = 25 // Sudden increase of 15 BPM or more
     private val heartRateMinimum = 65 // Only consider increases above this base rate
 
+    //Press, C. (no date) The emerging science of human screams. Available at: https://phys.org/news/2015-07-occupy-privileged-acoustic-niche-biological.html (Accessed: 3 July 2025).
     // Scream detection thresholds
     private var previousIntensity: Float = 0f
     private var previousIntensityTime: Long = 0
