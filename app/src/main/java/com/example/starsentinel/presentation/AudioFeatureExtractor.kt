@@ -13,6 +13,8 @@ import kotlin.math.sqrt
 class AudioFeatureExtractor {
     private val tag = "AudioFeatureExtractor"
 
+    // Six, J., Cornelis, O. and Leman, M. (2014) ‘Tarsosdsp, a real-time audio processing framework in java’, in Proceedings of the 53rd AES Conference (AES 53rd).
+
     // MFCC features
     private val _mfccValues = MutableStateFlow(List(13) { 0f })
     val mfccValues: StateFlow<List<Float>> = _mfccValues.asStateFlow()
@@ -30,7 +32,6 @@ class AudioFeatureExtractor {
     private val maxBufferSize = 50
 
     //Process a buffer of audio samples
-
     fun processAudioBuffer(buffer: ShortArray, sampleRate: Int) {
         try {
             // Calculate signal intensity (RMS)
