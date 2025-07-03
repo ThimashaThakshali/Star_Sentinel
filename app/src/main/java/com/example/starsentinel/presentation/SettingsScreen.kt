@@ -73,7 +73,7 @@ fun SettingsScreen(navController: NavController) {
                 Triple("Alert Messages", "alertMessageScreen", R.drawable.alert_msg_icon),
                 Triple("Biometric Data", "biometricDataScreen", R.drawable.heart_rate_icon),
                 Triple("Current Location", "locationScreen", R.drawable.safe_zone_icon),
-                Triple("Safe Zones", "manageGeofences", R.drawable.safe_zone_icon),
+                //Triple("Safe Zones", "manageGeofences", R.drawable.safe_zone_icon),
 
                 )
 
