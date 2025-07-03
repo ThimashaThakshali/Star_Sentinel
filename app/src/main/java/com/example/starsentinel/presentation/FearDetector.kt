@@ -23,7 +23,7 @@ class FearDetector(private val context: Context) {
     private val tag = "FearDetector "
 
     // Backend API URL -  ngrok URL
-    private val apiUrl = "https://cd68-34-16-204-224.ngrok-free.app/predict"
+    private val apiUrl = "https://a755-34-30-204-103.ngrok-free.app/predict"
 
     // Flow to expose fear detection state
     private val _isFearDetected = MutableStateFlow(false)

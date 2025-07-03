@@ -59,12 +59,13 @@ fun SetupScreen(navController: NavController) {
             text = "Add Contacts",
             onClick = { navController.navigate("createContact") } // Navigate to Add Contacts Screen
         )
+        /*
 
         SetupOption(
             iconRes = R.drawable.safe_zone_icon,
             text = "Add Safe Zone",
             onClick = { navController.navigate("setGeofence")}
-        )
+        )*/
 
         Spacer(modifier = Modifier.height(10.dp))
 
